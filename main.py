@@ -508,7 +508,7 @@ async def txt_handler(bot: Client, m: Message):
         # API request to create stream
                     api_urls = "https://live-api-yztz.onrender.com/api/create_stream"
                     payload = {"m3u8_url": new_url}
-                    headers = {"Content-Type": "application/json"}
+                    headers = {"Content-Type": "application/json", "access-control-allow-origin": "https://live-api-yztz.onrender.com"}
 
                     async with aiohttp.ClientSession() as session:
                         async with session.post(api_urls, json=payload, headers=headers) as response:
