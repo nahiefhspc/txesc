@@ -504,7 +504,7 @@ async def txt_handler(bot: Client, m: Message):
                         base_path = url.split('?')[0].replace('master.mpd', '')
                         query_params = url.split('?')[1] if '?' in url else ''
             # Construct new m3u8 URL with the provided token (raw_text4)
-                        new_url = f"{base_path}hls/{raw_text4}/main.m3u8" + (f"?{query_params}" if query_params else '')
+                        new_url = f"{base_path}hls/{raw_text2}/main.m3u8" + (f"?{query_params}" if query_params else '')
             
             # Log the constructed URL for debugging (only on first attempt)
                         if attempt == 0:
