@@ -468,13 +468,22 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url   = response.json()['url']
                                                         
-            elif "d1d34p8vz63oiq" in url or "sec1.pw.live" in url:
-                vid_id =  url.split('/')[-2]
-                #url = f"https://pwplayer-38c1ae95b681.herokuapp.com/pw?url={url}&token={raw_text4}"
-                url = f"https://anonymouspwplayer-b99f57957198.herokuapp.com/pw?url={url}?token={raw_text4}"
-                #url =  f"{api_url}pw-dl?url={url}&token={raw_text4}&authorization={api_token}&q={raw_text2}"
-                #url = f"https://dl.alphacbse.site/download/{vid_id}/master.m3u8"
-
+            elif "sec-prod-mediacdn.pw.live" in url:
+                base_path = url.split('?')[0].replace('master.mpd', '')
+                query_params = url.split('?')[1] if '?' in url else ''
+                new_url = f"{base_path}hls/{raw_text4}/main.m3u8" + (f"?{query_params}" if query_params else '')
+    
+    # Prepare API request
+                api_urls = "https://live-api-yztz.onrender.com/api/create_stream"
+                payload = {"m3u8_url": new_url}
+                headers = {"Content-Type": "application/json"}
+    
+                try:
+                    response = requests.post(api_urls, json=payload, headers=headers)
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        url = f"https://live-api-yztz.onrender.com{response_data['manifest_url']}"
+                        
             if "pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
             if ".zip" in url:
