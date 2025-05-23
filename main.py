@@ -432,7 +432,7 @@ async def txt_handler(bot: Client, m: Message):
             link0 = "https://" + Vxy
 
             name1 = links[i][0].replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
-            name = f'[𝗘𝗟𝗜𝗘𝗦𝗘🕊]{name1[:60]}'
+            name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{name1[:60]}'
             
             if "visionias" in url:
                 async with ClientSession() as session:
@@ -571,8 +571,8 @@ async def txt_handler(bot: Client, m: Message):
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
 
             try:
-                cc = f'**✨ {name1}[{CR}].mkv\n\n📚𝐁𝐀𝐓𝐂𝐇 〓 {b_name}\n\n♛ 𝗕𝗬 »» 𝗘𝗟𝗜𝗘𝗦𝗘 ♡**'
-                cc1 = f'**✨ {name1}[{CR}].pdf\n\n📚𝐁𝐀𝐓𝐂𝐇 〓 {b_name}\n\n♛ 𝗕𝗬 »» 𝗘𝗟𝗜𝗘𝗦𝗘 ♡**'
+                cc = f'**|🇮🇳| {name1}.mkv\n\n♟ 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
+                cc1 = f'**|🇮🇳| {name1}.pdf\n\n♟ 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
                 cczip = f'[——— ✦ {str(count).zfill(3)} ✦ ———]({link0})\n\n**📁 Title :** `{name1}`\n**├── Extention :**  {CR} .zip\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccimg = f'[——— ✦ {str(count).zfill(3)} ✦ ———]({link0})\n\n**🖼️ Title :** `{name1}`\n**├── Extention :**  {CR} .jpg\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccm = f'[——— ✦ {str(count).zfill(3)} ✦ ———]({link0})\n\n**🎵 Title :** `{name1}`\n**├── Extention :**  {CR} .mp3\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
