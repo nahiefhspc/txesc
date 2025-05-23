@@ -507,9 +507,7 @@ async def txt_handler(bot: Client, m: Message):
                         new_url = f"{base_path}hls/{raw_text2}/main.m3u8" + (f"?{query_params}" if query_params else '')
             
             # Log the constructed URL for debugging (only on first attempt)
-                        if attempt == 0:
-                            await m.reply_text(f"🔍 Debugging: Constructed m3u8 URL: `{new_url}`", disable_web_page_preview=True)
-
+                        
             # Prepare API request
                         api_urls = "https://live-api-yztz.onrender.com/api/create_stream"
                         payload = {"m3u8_url": new_url}
@@ -519,46 +517,27 @@ async def txt_handler(bot: Client, m: Message):
                         async with aiohttp.ClientSession() as session:
                             async with session.post(api_urls, json=payload, headers=headers) as response:
                     # Log the API response status
-                                await m.reply_text(f"🔍 Debugging: API Response Status (Attempt {attempt + 1}/{max_retries}): {response.status}", disable_web_page_preview=True)
-                    
+                                    
                                 if response.status == 200:
                                     response_data = await response.json()
                         # Log the full API response for debugging
-                                    await m.reply_text(f"🔍 Debugging: API Response (Attempt {attempt + 1}/{max_retries}): {json.dumps(response_data, indent=2)}", disable_web_page_preview=True)
-                        
+                                    
                         # Check for required keys
                                     if 'manifest_url' in response_data and 'stream_id' in response_data and 'expires_at' in response_data and 'token' in response_data:
                                         url = f"https://live-api-yztz.onrender.com{response_data['manifest_url']}"
                             # Log the final generated URL and additional metadata
-                                        await m.reply_text(
-                                            f"🔍 Debugging: Successfully generated manifest URL (Attempt {attempt + 1}/{max_retries})\n"
-                                            f"Manifest URL: `{url}`\n"
-                                            f"Stream ID: `{response_data['stream_id']}`\n"
-                                            f"Expires At: `{response_data['expires_at']}`\n"
-                                            f"Token: `{response_data['token']}`",
-                                            disable_web_page_preview=True
-                                        )
-                                        break  # Success, exit retry loop
-                                    else:
-                                        await m.reply_text(
-                                            f"⚠️ Error: Missing required keys in API response for {new_url} (Attempt {attempt + 1}/{max_retries}). "
-                                            f"Received: {json.dumps(response_data, indent=2)}"
-                                        )
+                                         # Success, exit retry loop
+                                    
                                         if attempt < max_retries - 1:
                                             await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                                             await asyncio.sleep(retry_delay)
                                         continue
-                                else:
-                                    await m.reply_text(
-                                        f"⚠️ API request failed with status {response.status} for {new_url} (Attempt {attempt + 1}/{max_retries}). "
-                                        f"Response: {await response.text()}"
-                                    )
+                                
                                     if attempt < max_retries - 1:
                                         await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                                         await asyncio.sleep(retry_delay)
                                     continue
                     except aiohttp.ClientError as e:
-                        await m.reply_text(f"⚠️ Error processing sec-prod-mediacdn URL: Request failed - {str(e)} (Attempt {attempt + 1}/{max_retries})")
                         if attempt < max_retries - 1:
                             await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                             await asyncio.sleep(retry_delay)
@@ -570,10 +549,7 @@ async def txt_handler(bot: Client, m: Message):
                             await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                             await asyncio.sleep(retry_delay)
                         continue
-                else:
-        # All retries failed
-                    await m.reply_text(f"⚠️ Failed to process sec-prod-mediacdn URL after {max_retries} attempts: {url}")
-                    continue
+                
             elif 'encrypted.m' in url:
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
