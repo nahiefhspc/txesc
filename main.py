@@ -534,19 +534,16 @@ async def txt_handler(bot: Client, m: Message):
                                         continue
                                 
                                     if attempt < max_retries - 1:
-                                        await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                                         await asyncio.sleep(retry_delay)
                                     continue
                     except aiohttp.ClientError as e:
                         if attempt < max_retries - 1:
-                            await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                             await asyncio.sleep(retry_delay)
                         continue
     
                     except Exception as e:
-                        await m.reply_text(f"⚠️ Error processing sec-prod-mediacdn URL: {str(e)} (Attempt {attempt + 1}/{max_retries})")
+                         
                         if attempt < max_retries - 1:
-                            await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                             await asyncio.sleep(retry_delay)
                         continue
                 
