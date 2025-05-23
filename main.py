@@ -483,12 +483,7 @@ async def txt_handler(bot: Client, m: Message):
                     if response.status_code == 200:
                         response_data = response.json()
                         url = f"https://live-api-yztz.onrender.com{response_data['manifest_url']}"
-                        
-            if "pdf*" in url:
-                url = f"https://dragoapi.vercel.app/pdf/{url}"
-            if ".zip" in url:
-                url = f"https://video.pablocoder.eu.org/appx-zip?url={url}"
-                
+                                        
             elif 'encrypted.m' in url:
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
