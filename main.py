@@ -499,37 +499,54 @@ async def txt_handler(bot: Client, m: Message):
         # Extract base path and query parameters
                     base_path = url.split('?')[0].replace('master.mpd', '')
                     query_params = url.split('?')[1] if '?' in url else ''
-        # Construct the new m3u8 URL with the provided token (raw_text4)
+        # Construct new m3u8 URL with the provided token (raw_text4)
                     new_url = f"{base_path}hls/{raw_text4}/main.m3u8" + (f"?{query_params}" if query_params else '')
         
         # Log the constructed URL for debugging
                     await m.reply_text(f"🔍 Debugging: Constructed m3u8 URL: `{new_url}`", disable_web_page_preview=True)
 
-        # API request to create stream
+        # Prepare API request
                     api_urls = "https://live-api-yztz.onrender.com/api/create_stream"
                     payload = {"m3u8_url": new_url}
-                    headers = {"Content-Type": "application/json", "access-control-allow-origin": "https://live-api-yztz.onrender.com"}
+                    headers = {"Content-Type": "application/json"}
 
+        # Send async POST request
                     async with aiohttp.ClientSession() as session:
                         async with session.post(api_urls, json=payload, headers=headers) as response:
-                            # Log the API response status
+                # Log the API response status
                             await m.reply_text(f"🔍 Debugging: API Response Status: {response.status}", disable_web_page_preview=True)
                 
                             if response.status == 200:
                                 response_data = await response.json()
                     # Log the full API response for debugging
                                 await m.reply_text(f"🔍 Debugging: API Response: {json.dumps(response_data, indent=2)}", disable_web_page_preview=True)
-                                
-                                if 'manifest_url' in response_data:
+                    
+                                if 'manifest_url' in response_data and 'stream_id' in response_data and 'expires_at' in response_data and 'token' in response_data:
                                     url = f"https://live-api-yztz.onrender.com{response_data['manifest_url']}"
-                        # Log the final generated URL
-                                    await m.reply_text(f"🔍 Debugging: Final Generated URL: `{url}`", disable_web_page_preview=True)
+                        # Log the final generated URL and additional metadata
+                                    await m.reply_text(
+                                        f"🔍 Debugging: Successfully generated manifest URL\n"
+                                        f"Manifest URL: `{url}`\n"
+                                        f"Stream ID: `{response_data['stream_id']}`\n"
+                                        f"Expires At: `{response_data['expires_at']}`\n"
+                                        f"Token: `{response_data['token']}`",
+                                        disable_web_page_preview=True
+                                    )
                                 else:
-                                    await m.reply_text(f"⚠️ Error: No 'manifest_url' in API response for {new_url}")
+                                    await m.reply_text(
+                                        f"⚠️ Error: Missing required keys in API response for {new_url}. "
+                                        f"Received: {json.dumps(response_data, indent=2)}"
+                                    )
                                     continue
                             else:
-                                await m.reply_text(f"⚠️ API request failed with status {response.status} for {new_url}")
+                                await m.reply_text(
+                                    f"⚠️ API request failed with status {response.status} for {new_url}. "
+                                    f"Response: {await response.text()}"
+                                )
                                 continue
+                except aiohttp.ClientError as e:
+                    await m.reply_text(f"⚠️ Error processing sec-prod-mediacdn URL: Request failed - {str(e)}")
+                    continue
                 except Exception as e:
                     await m.reply_text(f"⚠️ Error processing sec-prod-mediacdn URL: {str(e)}")
                     continue
