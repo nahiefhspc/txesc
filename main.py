@@ -529,7 +529,6 @@ async def txt_handler(bot: Client, m: Message):
                                          # Success, exit retry loop
                                     
                                         if attempt < max_retries - 1:
-                                            await m.reply_text(f"🔄 Retrying... ({attempt + 2}/{max_retries})")
                                             await asyncio.sleep(retry_delay)
                                         continue
                                 
