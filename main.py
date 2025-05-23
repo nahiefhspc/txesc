@@ -498,18 +498,27 @@ async def txt_handler(bot: Client, m: Message):
                 base_path = url.split('?')[0].replace('master.mpd', '')
                 query_params = url.split('?')[1] if '?' in url else ''
                 new_url = f"{base_path}hls/{raw_text4}/main.m3u8" + (f"?{query_params}" if query_params else '')
-    
+
                 api_urls = "https://live-api-yztz.onrender.com/api/create_stream"
                 payload = {"m3u8_url": new_url}
                 headers = {"Content-Type": "application/json"}
-    
+
                 try:
-                    response = requests.post(api_urls, json=payload, headers=headers)
-                    if response.status_code == 200:
-                        response_data = response.json()
-                        url = f"https://live-api-yztz.onrender.com{response_data['manifest_url']}"
-                except:
-                    pass
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(api_urls, json=payload, headers=headers) as response:
+                            if response.status == 200:
+                                response_data = await response.json()
+                                if 'manifest_url' in response_data:
+                                    url = f"https://live-api-yztz.onrender.com{response_data['manifest_url']}"
+                                else:
+                                    await m.reply_text(f"⚠️ Error: No 'manifest_url' in API response for {new_url}")
+                                    continue
+                            else:
+                                await m.reply_text(f"⚠️ API request failed with status {response.status} for {new_url}")
+                                continue
+                except Exception as e:
+                    await m.reply_text(f"⚠️ Error processing sec-prod-mediacdn URL: {str(e)}")
+                    continue
 
             elif 'encrypted.m' in url:
                 appxkey = url.split('*')[1]
