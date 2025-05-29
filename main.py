@@ -213,7 +213,7 @@ async def youtube_to_txt(client, message: Message):
 
 m_file_path = "main.py"
 @bot.on_message(filters.command("getcookies") & filters.private)
-async def getcookies_handler(client: Client, m: Message):
+async def getcookies_handler Masonry(client: Client, m: Message):
     try:
         # Send the cookies file to the user
         await client.send_document(
@@ -495,37 +495,34 @@ async def txt_handler(bot: Client, m: Message):
                 url = response.json()['url']
 
             elif "sec-prod-mediacdn.pw.live" in url:
-            max_retries = 3
-            retry_delay = 2  # Delay in seconds between retries
-
-            for attempt in range(max_retries):
-                try:
-            # Extract base path and query parameters
-                    base_path = url.split('?')[0].replace('master.mpd', '')
-                    query_params = url.split('?')[1] if '?' in url else ''
-            # Construct new m3u8 URL
-                    new_url = f"{base_path}hls/720/main.m3u8" + (f"?{query_params}" if query_params else '')
-                    new_url = new_url.replace("https://sec-prod-mediacdn.pw.live", "https://anonymousrajputplayer-9ab2f2730a02.herokuapp.com/sec-prod-mediacdn.pw.live")
-            
-            # Prepare API request
-                    api_url = "https://api-accesstoken.vercel.app"
-                    headers = {"Content-Type": "application/json"}
-
-            # Send async GET request
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(api_url, headers=headers) as response:
-                            if response.status == 200:
-                               response_data = await response.json()
-                        # Check for required key
-                               if 'access_token' in response_data:
-                                   url = f"{new_url}&token={response_data['access_token']}"
-                                   break  # Success, exit retry loop
-                               else:
-                                   url = f"{new_url}"  # No token, use new_url
-                                   break  # Exit retry loop
-                           else:
-                               if attempt < max_retries - 1:
-                                   await asyncio.sleep(retry_delay)
+                max_retries = 3
+                retry_delay = 2  # Delay in seconds between retries
+                for attempt in range(max_retries):
+                    try:
+                        # Extract base path and query parameters
+                        base_path = url.split('?')[0].replace('master.mpd', '')
+                        query_params = url.split('?')[1] if '?' in url else ''
+                        # Construct new m3u8 URL
+                        new_url = f"{base_path}hls/{raw_text2}/main.m3u8" + (f"?{query_params}" if query_params else '')
+                        new_url = new_url.replace("https://sec-prod-mediacdn.pw.live", "https://anonymousrajputplayer-9ab2f2730a02.herokuapp.com/sec-prod-mediacdn.pw.live")
+                        # Prepare API request
+                        api_url = "https://api-accesstoken.vercel.app"
+                        headers = {"Content-Type": "application/json"}
+                        # Send async GET request
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(api_url, headers=headers) as response:
+                                if response.status == 200:
+                                    response_data = await response.json()
+                                    # Check for required key
+                                    if 'access_token' in response_data:
+                                        url = f"{new_url}&token={response_data['access_token']}"
+                                        break  # Success, exit retry loop
+                                    else:
+                                        url = f"{new_url}"  # No token, use new_url
+                                        break  # Exit retry loop
+                                else:
+                                    if attempt < max_retries - 1:
+                                        await asyncio.sleep(retry_delay)
                                     continue
                     except aiohttp.ClientError as e:
                         print(f"Attempt {attempt + 1} failed: {e}")
@@ -661,7 +658,7 @@ async def txt_handler(bot: Client, m: Message):
                            f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
                            f"╰━📚𝐁𝐚𝐭𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"📚𝐓𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
+                           f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"🛑**Send** /stop **to stop process**\n┃\n" \
                            f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ [ELIESE🐦](https://t.me/+MdZ2996M2G43MWFl)"                    
@@ -687,10 +684,10 @@ async def txt_handler(bot: Client, m: Message):
                            f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
                            f"╰━📚𝐁𝐚𝐭𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"📚𝐓𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
+                           f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"🛑**Send** /stop **to stop process**\n┃\n" \
-                           f"╰━✦𝐁𝐨𝐭 � М𝐚𝐝𝐞 𝐁𝐲 ✦ [ELIESE🐦](https://t.me/+MdZ2996M2G43MWFl)"                    
+                           f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ [ELIESE🐦](https://t.me/+MdZ2996M2G43MWFl)"                    
                     prog = await m.reply_text(Show, disable_web_page_preview=True)
                     res_file = await helper.decrypt_and_merge_video(mpd, keys_string, path, name, raw_text2)
                     filename = res_file
@@ -713,7 +710,7 @@ async def txt_handler(bot: Client, m: Message):
                            f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
                            f"╰━📚𝐁𝐚𝐭𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"📚𝐓𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
+                           f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"🛑**Send** /stop **to stop process**\n┃\n" \
                            f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ [ELIESE🐦](https://t.me/+MdZ2996M2G43MWFl)"                    
