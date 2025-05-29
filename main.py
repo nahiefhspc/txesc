@@ -212,17 +212,6 @@ async def youtube_to_txt(client, message: Message):
     os.remove(txt_file)
 
 m_file_path = "main.py"
-@bot.on_message(filters.command("getcookies") & filters.private)
-async def getcookies_handler Masonry(client: Client, m: Message):
-    try:
-        # Send the cookies file to the user
-        await client.send_document(
-            chat_id=m.chat.id,
-            document=cookies_file_path,
-            caption="Here is the `youtube_cookies.txt` file."
-        )
-    except Exception as e:
-        await m.reply_text(f"⚠️ An error occurred: {str(e)}")     
 
 @bot.on_message(filters.command("mfile") & filters.private)
 async def getmfile_handler(client: Client, m: Message):
