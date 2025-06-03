@@ -433,7 +433,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             logging.warning(f"Stream copy failed: {e.stderr.decode()}. Falling back to re-encoding.")
             # Fallback to re-encoding
             stream = ffmpeg.input(filename, ss=10)
-            stream = ffmpeg.output(stream, trimmed_filename, c:v='libx264', c:a='aac', preset='fast', loglevel='error')
+            stream = ffmpeg.output(stream, trimmed_filename, c_v='libx264', c_a='aac', preset='fast', loglevel='error')
             ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
             logging.info(f"Trimmed video created with re-encoding: {trimmed_filename}")
         
