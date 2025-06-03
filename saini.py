@@ -340,24 +340,66 @@ async def download_video(url, cmd, name):
     # Base download command
     download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
 
-    # If it's an .m3u8 URL, modify the command to start from the 3rd segment
+    # If it's an .m3u8 URL, process the playlist to start from the 3rd segment
     if is_m3u8:
-        # Add --playlist-start to begin from the 3rd segment (index starts at 1)
-        download_cmd = download_cmd.replace("yt-dlp ", "yt-dlp --playlist-start 3 ")
+        try:
+            # Fetch the .m3u8 playlist
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            playlist_content = response.text
+
+            # Parse segments (lines that don't start with # and are not empty)
+            segments = [line.strip() for line in playlist_content.splitlines() 
+                       if line.strip() and not line.startswith('#')]
+
+            if len(segments) < 3:
+                logging.warning(f"Playlist has only {len(segments)} segments, downloading all available segments.")
+            else:
+                # Start from the 3rd segment (index 2 in 0-based indexing)
+                segment_urls = [urljoin(url, segment) for segment in segments[2:]]
+                if not segment_urls:
+                    logging.error("No valid segments found after the 2nd segment.")
+                    return f"{name}.mp4"
+
+                # Create a temporary .m3u8 file with segments starting from the 3rd
+                temp_playlist = f"temp_{name}.m3u8"
+                with open(temp_playlist, 'w') as f:
+                    f.write("#EXTM3U\n")
+                    for segment_url in segment_urls:
+                        f.write(f"{segment_url}\n")
+
+                # Modify the download command to use the temporary playlist
+                download_cmd = download_cmd.replace(url, temp_playlist)
+                logging.info(f"Modified playlist created: {temp_playlist}")
+
+        except requests.RequestException as e:
+            logging.error(f"Failed to fetch .m3u8 playlist: {str(e)}")
+            return f"{name}.mp4"
 
     logging.info(f"Executing command: {download_cmd}")
     
     # Execute the download command
     k = subprocess.run(download_cmd, shell=True, capture_output=True, text=True)
     
+    # Log subprocess output for debugging
+    if k.returncode != 0:
+        logging.error(f"Download failed with code {k.returncode}: {k.stderr}")
+    
     # Handle retries for visionias URLs
     if "visionias" in cmd.lower() and k.returncode != 0 and failed_counter <= 10:
         failed_counter += 1
         logging.warning(f"Download failed, retrying ({failed_counter}/10)...")
         await asyncio.sleep(5)
+        # Clean up temporary playlist if it exists
+        if is_m3u8 and os.path.exists(f"temp_{name}.m3u8"):
+            os.remove(f"temp_{name}.m3u8")
         return await download_video(url, cmd, name)
     
     failed_counter = 0
+    
+    # Clean up temporary playlist if it exists
+    if is_m3u8 and os.path.exists(f"temp_{name}.m3u8"):
+        os.remove(f"temp_{name}.m3u8")
     
     # Check for downloaded file with various extensions
     try:
@@ -375,7 +417,6 @@ async def download_video(url, cmd, name):
     except FileNotFoundError as exc:
         logging.error(f"File not found: {name}: {str(exc)}")
         return f"{name}.mp4"
-
 # Send document
 async def send_doc(bot: Client, m: Message, cc, ka, cc1, prog, count, name):
     try:
