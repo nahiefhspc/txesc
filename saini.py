@@ -428,40 +428,40 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         original_duration = duration(filename)
         logging.info(f"Input video: size={human_readable_size(file_size)}, duration={original_duration} seconds")
         
-        # Try trimming with stream copy first (fast)
+        # Step 1: Try stream copy for fast trimming
         logging.info(f"Attempting stream copy trim: {filename} -> {trimmed_filename}")
         result = subprocess.run(
             f'ffmpeg -i "{filename}" -ss 00:00:10 -c:v copy -c:a copy "{trimmed_filename}"',
             shell=True,
             capture_output=True,
-            text=True,
-            timeout=600  # 10-minute timeout for testing
+            text=True
         )
-        if result.returncode != 0:
+        if result.returncode != 0 or not os.path.exists(trimmed_filename):
             logging.warning(f"Stream copy failed: {result.stderr}. Falling back to re-encoding.")
-            # Fallback to re-encoding with optimized settings
+            # Step 2: Re-encode with ultrafast preset and duration limit
             trimmed_duration = max(0, original_duration - 10)  # Remaining duration
             result = subprocess.run(
-                f'ffmpeg -i "{filename}" -ss 00:00:10 -t {trimmed_duration} -c:v libx264 -c:a aac -preset ultrafast "{trimmed_filename}"',
+                f'ffmpeg -i "{filename}" -ss 00:00:10 -t {trimmed_duration} -c:v libx264 -c:a aac -preset ultrafast -threads 0 "{trimmed_filename}"',
                 shell=True,
                 capture_output=True,
-                text=True,
-                timeout=600
+                text=True
             )
             if result.returncode != 0:
                 logging.error(f"Re-encoding failed: {result.stderr}")
                 raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
         logging.info(f"Trimmed video created: {trimmed_filename}")
         
-        # Verify trimmed file
+        # Step 3: Verify trimmed file
         if not os.path.exists(trimmed_filename):
             raise FileNotFoundError(f"Trimmed video file not created: {trimmed_filename}")
+        trimmed_size = os.path.getsize(trimmed_filename)
         trimmed_duration = duration(trimmed_filename)
-        logging.info(f"Trimmed video duration: {trimmed_duration} seconds")
+        logging.info(f"Trimmed video: size={human_readable_size(trimmed_size)}, duration={trimmed_duration} seconds")
         if trimmed_duration >= original_duration:
-            logging.warning(f"Trimmed duration ({trimmed_duration}s) not less than original ({original_duration}s)")
+            logging.error(f"Trimming failed: trimmed duration ({trimmed_duration}s) not less than original ({original_duration}s)")
+            raise ValueError("Video was not trimmed correctly")
         
-        # Generate thumbnail
+        # Step 4: Generate thumbnail
         logging.info(f"Generating thumbnail: {trimmed_filename} -> {thumbnail_filename}")
         result = subprocess.run(
             f'ffmpeg -i "{trimmed_filename}" -ss 00:00:00 -vframes 1 "{thumbnail_filename}"',
@@ -470,31 +470,30 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             text=True
         )
         if result.returncode != 0:
-            logging.error(f"Thumbnail generation failed: {result.stderr}")
+            logging.warning(f"Thumbnail generation failed: {result.stderr}")
             thumbnail_filename = None
         else:
             logging.info(f"Thumbnail created: {thumbnail_filename}")
         
-        # Delete progress message
+        # Step 5: Delete progress message
         await prog.delete(True)
         reply = await m.reply_text(
-            f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 �(M)𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
+            f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
         )
         
-        # Set thumbnail
+        # Step 6: Set thumbnail
         if thumb == "/d":
             thumbnail = thumbnail_filename if os.path.exists(thumbnail_filename) else None
         else:
             thumbnail = thumb
         
-        # Check file size (Telegram limit: 2GB)
-        trimmed_size = os.path.getsize(trimmed_filename)
+        # Step 7: Check file size (Telegram limit: 2GB)
         if trimmed_size > 2 * 1024 * 1024 * 1024:  # 2GB
             raise ValueError(f"Trimmed video exceeds Telegram's 2GB limit: {human_readable_size(trimmed_size)}")
         
         start_time = time.time()
         
-        # Upload video
+        # Step 8: Upload video
         try:
             await m.reply_video(
                 trimmed_filename,
@@ -523,9 +522,9 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
     except subprocess.CalledProcessError as e:
         logging.error(f"FFmpeg processing failed: {e.stderr}")
         await m.reply_text(f"Error processing video: FFmpeg failed - {e.stderr}")
-    except TimeoutError as e:
-        logging.error(f"FFmpeg command timed out: {str(e)}")
-        await m.reply_text(f"Error: Video processing timed out after 10 minutes. Try a smaller video or faster system.")
+    except ValueError as e:
+        logging.error(f"Validation error: {str(e)}")
+        await m.reply_text(f"Error: {str(e)}")
     except Exception as e:
         logging.error(f"Error in send_vid: {str(e)}")
         await m.reply_text(f"Error uploading video: {str(e)}")
