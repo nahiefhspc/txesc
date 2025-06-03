@@ -418,16 +418,40 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         trimmed_filename = f"trimmed_{filename}"
         thumbnail_filename = f"{filename}.jpg"
         
-        # Trim the first 10 seconds using ffmpeg-python
-        stream = ffmpeg.input(filename, ss=10)  # Start at 10 seconds
-        stream = ffmpeg.output(stream, trimmed_filename, c='copy', loglevel='error')  # Stream copy for efficiency
-        ffmpeg.run(stream)
+        # Log input file details
+        logging.info(f"Processing video: {filename}")
+        if not os.path.exists(filename):
+            raise FileNotFoundError(f"Input video file not found: {filename}")
+        
+        # Try trimming with stream copy first
+        try:
+            stream = ffmpeg.input(filename, ss=10)  # Start at 10 seconds
+            stream = ffmpeg.output(stream, trimmed_filename, c='copy', loglevel='error')
+            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+            logging.info(f"Trimmed video created with stream copy: {trimmed_filename}")
+        except ffmpeg.Error as e:
+            logging.warning(f"Stream copy failed: {e.stderr.decode()}. Falling back to re-encoding.")
+            # Fallback to re-encoding
+            stream = ffmpeg.input(filename, ss=10)
+            stream = ffmpeg.output(stream, trimmed_filename, c:v='libx264', c:a='aac', preset='fast', loglevel='error')
+            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+            logging.info(f"Trimmed video created with re-encoding: {trimmed_filename}")
+        
+        # Verify trimmed file exists
+        if not os.path.exists(trimmed_filename):
+            raise FileNotFoundError(f"Trimmed video file not created: {trimmed_filename}")
         
         # Generate thumbnail from the trimmed video
-        stream = ffmpeg.input(trimmed_filename, ss=0)  # First frame of trimmed video
-        stream = ffmpeg.output(stream, thumbnail_filename, vframes=1, loglevel='error')
-        ffmpeg.run(stream)
+        try:
+            stream = ffmpeg.input(trimmed_filename, ss=0)  # First frame of trimmed video
+            stream = ffmpeg.output(stream, thumbnail_filename, vframes=1, loglevel='error')
+            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+            logging.info(f"Thumbnail created: {thumbnail_filename}")
+        except ffmpeg.Error as e:
+            logging.error(f"Thumbnail generation failed: {e.stderr.decode()}")
+            thumbnail_filename = None
         
+        # Delete progress message
         await prog.delete(True)
         reply = await m.reply_text(
             f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
@@ -436,7 +460,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         # Set thumbnail
         try:
             if thumb == "/d":
-                thumbnail = thumbnail_filename
+                thumbnail = thumbnail_filename if os.path.exists(thumbnail_filename) else None
             else:
                 thumbnail = thumb
         except Exception as e:
@@ -446,6 +470,12 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         
         # Get duration of the trimmed video
         dur = int(duration(trimmed_filename))
+        logging.info(f"Trimmed video duration: {dur} seconds")
+        
+        # Verify file size (Telegram limit: 2GB for free users)
+        file_size = os.path.getsize(trimmed_filename)
+        if file_size > 2 * 1024 * 1024 * 1024:  # 2GB
+            raise ValueError(f"Trimmed video exceeds Telegram's 2GB limit: {human_readable_size(file_size)}")
         
         start_time = time.time()
         
@@ -461,6 +491,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
                 progress=progress_bar,
                 progress_args=(reply, start_time)
             )
+            logging.info(f"Uploaded video: {trimmed_filename}")
         except Exception as e:
             logging.warning(f"Video upload failed, trying document: {str(e)}")
             await m.reply_document(
@@ -469,10 +500,13 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
                 progress=progress_bar,
                 progress_args=(reply, start_time)
             )
+            logging.info(f"Uploaded document: {trimmed_filename}")
+    except FileNotFoundError as e:
+        logging.error(f"File error: {str(e)}")
+        await m.reply_text(f"Error: {str(e)}")
     except ffmpeg.Error as e:
-        logging.error(f"FFmpeg processing failed: {str(e)}")
+        logging.error(f"FFmpeg processing failed: {e.stderr.decode()}")
         await m.reply_text(f"Error processing video: FFmpeg failed")
-        return
     except Exception as e:
         logging.error(f"Error in send_vid: {str(e)}")
         await m.reply_text(f"Error uploading video: {str(e)}")
