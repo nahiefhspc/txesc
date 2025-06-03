@@ -463,6 +463,60 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         # Delete progress message
         await prog.delete(True)
         reply = await m.reply_text(
+
+async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
+    try:
+        # Create a temporary output file for the trimmed video
+        trimmed_filename = f"trimmed_{filename}"
+        thumbnail_filename = f"{filename}.jpg"
+        
+        # Log input file details
+        logging.info(f"Processing video: {filename}")
+        if not os.path.exists(filename):
+            raise FileNotFoundError(f"Input video file not found: {filename}")
+        
+        # Get original duration for reference
+        original_duration = int(duration(filename))
+        logging.info(f"Original video duration: {original_duration} seconds")
+        
+        # Trim the video starting at 10 seconds with re-encoding
+        logging.info(f"Trimming video: {filename} -> {trimmed_filename}")
+        result = subprocess.run(
+            f'ffmpeg -i "{filename}" -ss 00:00:10 -c:v libx264 -c:a aac -preset fast "{trimmed_filename}"',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            logging.error(f"FFmpeg trimming failed: {result.stderr}")
+            raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
+        logging.info(f"Trimmed video created: {trimmed_filename}")
+        
+        # Verify trimmed file exists and has correct duration
+        if not os.path.exists(trimmed_filename):
+            raise FileNotFoundError(f"Trimmed video file not created: {trimmed_filename}")
+        trimmed_duration = int(duration(trimmed_filename))
+        logging.info(f"Trimmed video duration: {trimmed_duration} seconds")
+        if trimmed_duration > original_duration:
+            logging.warning(f"Trimmed duration ({trimmed_duration}s) is not less than original ({original_duration}s)")
+        
+        # Generate thumbnail from the trimmed video
+        logging.info(f"Generating thumbnail: {trimmed_filename} -> {thumbnail_filename}")
+        result = subprocess.run(
+            f'ffmpeg -i "{trimmed_filename}" -ss 00:00:00 -vframes 1 "{thumbnail_filename}"',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            logging.error(f"Thumbnail generation failed: {result.stderr}")
+            thumbnail_filename = None
+        else:
+            logging.info(f"Thumbnail created: {thumbnail_filename}")
+        
+        # Delete progress message
+        await prog.delete(True)
+        reply = await m.reply_text(
             f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
         )
         
@@ -476,10 +530,6 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             logging.error(f"Thumbnail error: {str(e)}")
             await m.reply_text(f"Thumbnail error: {str(e)}")
             thumbnail = None
-        
-        # Get duration of the trimmed video
-        dur = int(duration(trimmed_filename))
-        logging.info(f"Trimmed video duration: {dur} seconds")
         
         # Verify file size (Telegram limit: 2GB for free users)
         file_size = os.path.getsize(trimmed_filename)
@@ -496,7 +546,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
                 height=720,
                 width=1280,
                 thumb=thumbnail,
-                duration=dur,
+                duration=trimmed_duration,
                 progress=progress_bar,
                 progress_args=(reply, start_time)
             )
@@ -520,8 +570,8 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         logging.error(f"Error in send_vid: {str(e)}")
         await m.reply_text(f"Error uploading video: {str(e)}")
     finally:
-        # Clean up files
-        for file in [filename, trimmed_filename, thumbnail_filename]:
+        # Clean up files (keep original for debugging)
+        for file in [trimmed_filename, thumbnail_filename]:
             if file and os.path.exists(file):
                 try:
                     os.remove(file)
