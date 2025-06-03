@@ -460,4 +460,70 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         if result.returncode != 0:
             logging.error(f"Thumbnail generation failed: {result.stderr}")
             thumbnail_filename = None
+        else:
+            logging.info(f"Thumbnail created: {thumbnail_filename}")
+        
+        # Delete progress message
+        await prog.delete(True)
+        reply = await m.reply_text(
+            f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
+        )
+        
+        # Set thumbnail
+        if thumb == "/d":
+            thumbnail = thumbnail_filename if os.path.exists(thumbnail_filename) else None
+        else:
+            thumbnail = thumb
+        
+        # Check file size (Telegram limit: 2GB)
+        file_size = os.path.getsize(trimmed_filename)
+        if file_size > 2 * 1024 * 1024 * 1024:  # 2GB
+            raise ValueError(f"Trimmed video exceeds Telegram's 2GB limit: {human_readable_size(file_size)}")
+        
+        start_time = time.time()
+        
+        # Upload video
+        try:
+            await m.reply_video(
+                trimmed_filename,
+                caption=cc,
+                supports_streaming=True,
+                height=720,
+                width=1280,
+                thumb=thumbnail,
+                duration=trimmed_duration,
+                progress=progress_bar,
+                progress_args=(reply, start_time)
+            )
+            logging.info(f"Uploaded video: {trimmed_filename}")
+        except Exception as e:
+            logging.warning(f"Video upload failed, trying document: {str(e)}")
+            await m.reply_document(
+                trimmed_filename,
+                caption=cc,
+                progress=progress_bar,
+                progress_args=(reply, start_time)
+            )
+            logging.info(f"Uploaded document: {trimmed_filename}")
+    except FileNotFoundError as e:
+        logging.error(f"File error: {str(e)}")
+        await m.reply_text(f"Error: {str(e)}")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"FFmpeg processing failed: {e.stderr}")
+        await m.reply_text(f"Error processing video: FFmpeg failed - {e.stderr}")
+    except Exception as e:
+        logging.error(f"Error in send_vid: {str(e)}")
+        await m.reply_text(f"Error uploading video: {str(e)}")
+    finally:
+        # Clean up files (keep original for debugging)
+        for file in [trimmed_filename, thumbnail_filename]:
+            if file and os.path.exists(file):
+                try:
+                    os.remove(file)
+                    logging.info(f"Deleted file: {file}")
+                except OSError as e:
+                    logging.error(f"Failed to delete file {file}: {str(e)}")
+        try:
+            await reply.delete(True)
+        except NameError:
             pass  # Reply might not be defined if an early error occurs
