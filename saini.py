@@ -423,28 +423,40 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         if not os.path.exists(filename):
             raise FileNotFoundError(f"Input video file not found: {filename}")
         
-        # Get original duration
-        original_duration = int(duration(filename))
-        logging.info(f"Original video duration: {original_duration} seconds")
+        # Get input video details
+        file_size = os.path.getsize(filename)
+        original_duration = duration(filename)
+        logging.info(f"Input video: size={human_readable_size(file_size)}, duration={original_duration} seconds")
         
-        # Trim the video starting at 10 seconds with re-encoding
-        logging.info(f"Trimming video: {filename} -> {trimmed_filename}")
+        # Try trimming with stream copy first (fast)
+        logging.info(f"Attempting stream copy trim: {filename} -> {trimmed_filename}")
         result = subprocess.run(
-            f'ffmpeg -i "{filename}" -ss 00:00:10 -c:v libx264 -c:a aac -preset fast "{trimmed_filename}"',
+            f'ffmpeg -i "{filename}" -ss 00:00:10 -c:v copy -c:a copy "{trimmed_filename}"',
             shell=True,
             capture_output=True,
             text=True,
-            timeout=300  # 5-minute timeout
+            timeout=600  # 10-minute timeout for testing
         )
         if result.returncode != 0:
-            logging.error(f"FFmpeg trimming failed: {result.stderr}")
-            raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
+            logging.warning(f"Stream copy failed: {result.stderr}. Falling back to re-encoding.")
+            # Fallback to re-encoding with optimized settings
+            trimmed_duration = max(0, original_duration - 10)  # Remaining duration
+            result = subprocess.run(
+                f'ffmpeg -i "{filename}" -ss 00:00:10 -t {trimmed_duration} -c:v libx264 -c:a aac -preset ultrafast "{trimmed_filename}"',
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=600
+            )
+            if result.returncode != 0:
+                logging.error(f"Re-encoding failed: {result.stderr}")
+                raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
         logging.info(f"Trimmed video created: {trimmed_filename}")
         
         # Verify trimmed file
         if not os.path.exists(trimmed_filename):
             raise FileNotFoundError(f"Trimmed video file not created: {trimmed_filename}")
-        trimmed_duration = int(duration(trimmed_filename))
+        trimmed_duration = duration(trimmed_filename)
         logging.info(f"Trimmed video duration: {trimmed_duration} seconds")
         if trimmed_duration >= original_duration:
             logging.warning(f"Trimmed duration ({trimmed_duration}s) not less than original ({original_duration}s)")
@@ -466,7 +478,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         # Delete progress message
         await prog.delete(True)
         reply = await m.reply_text(
-            f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
+            f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 �(M)𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
         )
         
         # Set thumbnail
@@ -476,9 +488,9 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             thumbnail = thumb
         
         # Check file size (Telegram limit: 2GB)
-        file_size = os.path.getsize(trimmed_filename)
-        if file_size > 2 * 1024 * 1024 * 1024:  # 2GB
-            raise ValueError(f"Trimmed video exceeds Telegram's 2GB limit: {human_readable_size(file_size)}")
+        trimmed_size = os.path.getsize(trimmed_filename)
+        if trimmed_size > 2 * 1024 * 1024 * 1024:  # 2GB
+            raise ValueError(f"Trimmed video exceeds Telegram's 2GB limit: {human_readable_size(trimmed_size)}")
         
         start_time = time.time()
         
@@ -491,7 +503,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
                 height=720,
                 width=1280,
                 thumb=thumbnail,
-                duration=trimmed_duration,
+                duration=int(trimmed_duration),
                 progress=progress_bar,
                 progress_args=(reply, start_time)
             )
@@ -511,6 +523,9 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
     except subprocess.CalledProcessError as e:
         logging.error(f"FFmpeg processing failed: {e.stderr}")
         await m.reply_text(f"Error processing video: FFmpeg failed - {e.stderr}")
+    except TimeoutError as e:
+        logging.error(f"FFmpeg command timed out: {str(e)}")
+        await m.reply_text(f"Error: Video processing timed out after 10 minutes. Try a smaller video or faster system.")
     except Exception as e:
         logging.error(f"Error in send_vid: {str(e)}")
         await m.reply_text(f"Error uploading video: {str(e)}")
