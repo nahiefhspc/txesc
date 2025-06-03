@@ -424,31 +424,40 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             raise FileNotFoundError(f"Input video file not found: {filename}")
         
         # Try trimming with stream copy first
-        try:
-            stream = ffmpeg.input(filename, ss=10)  # Start at 10 seconds
-            stream = ffmpeg.output(stream, trimmed_filename, c='copy', loglevel='error')
-            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
-            logging.info(f"Trimmed video created with stream copy: {trimmed_filename}")
-        except ffmpeg.Error as e:
-            logging.warning(f"Stream copy failed: {e.stderr.decode()}. Falling back to re-encoding.")
+        logging.info(f"Attempting to trim video with stream copy: {filename} -> {trimmed_filename}")
+        result = subprocess.run(
+            f'ffmpeg -i "{filename}" -ss 00:00:10 -c:v copy -c:a copy "{trimmed_filename}"',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            logging.warning(f"Stream copy failed: {result.stderr}. Falling back to re-encoding.")
             # Fallback to re-encoding
-            stream = ffmpeg.input(filename, ss=10)
-            stream = ffmpeg.output(stream, trimmed_filename, c_v='libx264', c_a='aac', preset='fast', loglevel='error')
-            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
-            logging.info(f"Trimmed video created with re-encoding: {trimmed_filename}")
+            result = subprocess.run(
+                f'ffmpeg -i "{filename}" -ss 00:00:10 -c:v libx264 -c:a aac -preset fast "{trimmed_filename}"',
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            if result.returncode != 0:
+                raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
+        logging.info(f"Trimmed video created: {trimmed_filename}")
         
         # Verify trimmed file exists
         if not os.path.exists(trimmed_filename):
             raise FileNotFoundError(f"Trimmed video file not created: {trimmed_filename}")
         
         # Generate thumbnail from the trimmed video
-        try:
-            stream = ffmpeg.input(trimmed_filename, ss=0)  # First frame of trimmed video
-            stream = ffmpeg.output(stream, thumbnail_filename, vframes=1, loglevel='error')
-            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
-            logging.info(f"Thumbnail created: {thumbnail_filename}")
-        except ffmpeg.Error as e:
-            logging.error(f"Thumbnail generation failed: {e.stderr.decode()}")
+        logging.info(f"Generating thumbnail from trimmed video: {trimmed_filename} -> {thumbnail_filename}")
+        result = subprocess.run(
+            f'ffmpeg -i "{trimmed_filename}" -ss 00:00:00 -vframes 1 "{thumbnail_filename}"',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            logging.error(f"Thumbnail generation failed: {result.stderr}")
             thumbnail_filename = None
         
         # Delete progress message
@@ -504,9 +513,9 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
     except FileNotFoundError as e:
         logging.error(f"File error: {str(e)}")
         await m.reply_text(f"Error: {str(e)}")
-    except ffmpeg.Error as e:
-        logging.error(f"FFmpeg processing failed: {e.stderr.decode()}")
-        await m.reply_text(f"Error processing video: FFmpeg failed")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"FFmpeg processing failed: {e.stderr}")
+        await m.reply_text(f"Error processing video: FFmpeg failed - {e.stderr}")
     except Exception as e:
         logging.error(f"Error in send_vid: {str(e)}")
         await m.reply_text(f"Error uploading video: {str(e)}")
@@ -519,4 +528,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
                     logging.info(f"Deleted file: {file}")
                 except OSError as e:
                     logging.error(f"Failed to delete file {file}: {str(e)}")
-        await reply.delete(True)
+        try:
+            await reply.delete(True)
+        except NameError:
+            pass  # Reply might not be defined if an early error occurs
