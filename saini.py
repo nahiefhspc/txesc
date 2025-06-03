@@ -333,29 +333,45 @@ def time_name():
 async def download_video(url, cmd, name):
     global failed_counter
     failed_counter = 0
+
+    # Check if the URL is an .m3u8 playlist
+    is_m3u8 = ".m3u8" in url.lower()
+
+    # Base download command
     download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
-    logging.info(download_cmd)
-    k = subprocess.run(download_cmd, shell=True)
-    if "visionias" in cmd and k.returncode != 0 and failed_counter <= 10:
+
+    # If it's an .m3u8 URL, modify the command to start from the 3rd segment
+    if is_m3u8:
+        # Add --playlist-start to begin from the 3rd segment (index starts at 1)
+        download_cmd = download_cmd.replace("yt-dlp ", "yt-dlp --playlist-start 3 ")
+
+    logging.info(f"Executing command: {download_cmd}")
+    
+    # Execute the download command
+    k = subprocess.run(download_cmd, shell=True, capture_output=True, text=True)
+    
+    # Handle retries for visionias URLs
+    if "visionias" in cmd.lower() and k.returncode != 0 and failed_counter <= 10:
         failed_counter += 1
         logging.warning(f"Download failed, retrying ({failed_counter}/10)...")
         await asyncio.sleep(5)
         return await download_video(url, cmd, name)
+    
     failed_counter = 0
+    
+    # Check for downloaded file with various extensions
     try:
-        if os.path.isfile(name):
-            return name
-        elif os.path.isfile(f"{name}.webm"):
-            return f"{name}.webm"
-        name = name.split(".")[0]
-        if os.path.isfile(f"{name}.mkv"):
-            return f"{name}.mkv"
-        elif os.path.isfile(f"{name}.mp4"):
-            return f"{name}.mp4"
-        elif os.path.isfile(f"{name}.mp4.webm"):
-            return f"{name}.mp4.webm"
-        logging.error(f"Downloaded video not found: {name}")
-        return name
+        possible_extensions = [".mp4", ".mkv", ".webm", ".mp4.webm"]
+        for ext in possible_extensions:
+            filename = f"{name}{ext}" if ext != ".mp4.webm" else f"{name}.mp4.webm"
+            if os.path.isfile(filename):
+                logging.info(f"Found downloaded file: {filename}")
+                return filename
+        
+        # If no file is found, log error and return default name
+        logging.error(f"Downloaded video not found for: {name}")
+        return f"{name}.mp4"
+    
     except FileNotFoundError as exc:
         logging.error(f"File not found: {name}: {str(exc)}")
         return f"{name}.mp4"
