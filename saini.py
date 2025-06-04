@@ -21,6 +21,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
 import ffmpeg  # Import ffmpeg-python
+from urllib.parse import urljoin
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -341,16 +342,18 @@ async def download_video(url, cmd, name):
     download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
 
     # If it's an .m3u8 URL, process the playlist to start from the 3rd segment
+    temp_playlist = None
     if is_m3u8:
         try:
             # Fetch the .m3u8 playlist
+            logging.info(f"Fetching playlist: {url}")
             response = requests.get(url, timeout=10)
             response.raise_for_status()
             playlist_content = response.text
 
             # Parse segments (lines that don't start with # and are not empty)
             segments = [line.strip() for line in playlist_content.splitlines() 
-                       if line.strip() and not line.startswith('#')]
+                       if line.strip() and not line.startswith('#') and not line.endswith('.m3u8')]
 
             if len(segments) < 3:
                 logging.warning(f"Playlist has only {len(segments)} segments, downloading all available segments.")
@@ -367,10 +370,10 @@ async def download_video(url, cmd, name):
                     f.write("#EXTM3U\n")
                     for segment_url in segment_urls:
                         f.write(f"{segment_url}\n")
+                logging.info(f"Created temporary playlist: {temp_playlist} with {len(segment_urls)} segments")
 
                 # Modify the download command to use the temporary playlist
                 download_cmd = download_cmd.replace(url, temp_playlist)
-                logging.info(f"Modified playlist created: {temp_playlist}")
 
         except requests.RequestException as e:
             logging.error(f"Failed to fetch .m3u8 playlist: {str(e)}")
@@ -379,11 +382,14 @@ async def download_video(url, cmd, name):
     logging.info(f"Executing command: {download_cmd}")
     
     # Execute the download command
-    k = subprocess.run(download_cmd, shell=True, capture_output=True, text=True)
-    
-    # Log subprocess output for debugging
-    if k.returncode != 0:
-        logging.error(f"Download failed with code {k.returncode}: {k.stderr}")
+    try:
+        k = subprocess.run(download_cmd, shell=True, capture_output=True, text=True)
+        logging.info(f"yt-dlp output: {k.stdout}")
+        if k.returncode != 0:
+            logging.error(f"Download failed with code {k.returncode}: {k.stderr}")
+    except Exception as e:
+        logging.error(f"Subprocess error: {str(e)}")
+        return f"{name}.mp4"
     
     # Handle retries for visionias URLs
     if "visionias" in cmd.lower() and k.returncode != 0 and failed_counter <= 10:
@@ -391,15 +397,15 @@ async def download_video(url, cmd, name):
         logging.warning(f"Download failed, retrying ({failed_counter}/10)...")
         await asyncio.sleep(5)
         # Clean up temporary playlist if it exists
-        if is_m3u8 and os.path.exists(f"temp_{name}.m3u8"):
-            os.remove(f"temp_{name}.m3u8")
+        if temp_playlist and os.path.exists(temp_playlist):
+            os.remove(temp_playlist)
         return await download_video(url, cmd, name)
     
     failed_counter = 0
     
     # Clean up temporary playlist if it exists
-    if is_m3u8 and os.path.exists(f"temp_{name}.m3u8"):
-        os.remove(f"temp_{name}.m3u8")
+    if temp_playlist and os.path.exists(temp_playlist):
+        os.remove(temp_playlist)
     
     # Check for downloaded file with various extensions
     try:
@@ -410,13 +416,14 @@ async def download_video(url, cmd, name):
                 logging.info(f"Found downloaded file: {filename}")
                 return filename
         
-        # If no file is found, log error and return default name
         logging.error(f"Downloaded video not found for: {name}")
         return f"{name}.mp4"
     
     except FileNotFoundError as exc:
         logging.error(f"File not found: {name}: {str(exc)}")
         return f"{name}.mp4"
+                # Modify the download command to use the temporary playlist
+
 # Send document
 async def send_doc(bot: Client, m: Message, cc, ka, cc1, prog, count, name):
     try:
