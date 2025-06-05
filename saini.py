@@ -16,187 +16,71 @@ from utils import progress_bar
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path  
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
-import ffmpeg  # Import ffmpeg-python
-from urllib.parse import urljoin
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# AES Key and IV for decryption
-KEY = b'^#^#&@*HDU@&@*()'
-IV = b'^@%#&*NSHUE&$*#)'
-
-# Check for FFmpeg installation (required for ffmpeg-python)
-def check_ffmpeg():
-    try:
-        subprocess.run(['ffmpeg', '-version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        logging.info("FFmpeg is installed and accessible.")
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logging.error("FFmpeg is not installed or not found in PATH. Please install FFmpeg.")
-        return False
-
-# Check for mp4decrypt installation (if used)
-def check_mp4decrypt():
-    try:
-        subprocess.run(['mp4decrypt', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        logging.info("mp4decrypt is installed and accessible.")
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logging.warning("mp4decrypt is not installed or not found in PATH. Required for encrypted video decryption.")
-        return False
-
-# Check for yt-dlp installation
-def check_ytdlp():
-    try:
-        subprocess.run(['yt-dlp', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        logging.info("yt-dlp is installed and accessible.")
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logging.error("yt-dlp is not installed or not found in PATH. Please install yt-dlp.")
-        return False
-
-# Check for aria2c installation
-def check_aria2c():
-    try:
-        subprocess.run(['aria2c', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        logging.info("aria2c is installed and accessible.")
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logging.warning("aria2c is not installed or not found in PATH. Required for fast downloads.")
-        return False
-
-# Run dependency checks at startup
-if not check_ffmpeg():
-    raise RuntimeError("FFmpeg is required but not installed. Please install FFmpeg.")
-check_mp4decrypt()  # Optional, only warn if missing
-if not check_ytdlp():
-    raise RuntimeError("yt-dlp is required but not installed. Please install yt-dlp.")
-check_aria2c()  # Optional, only warn if missing
-
-# Decryption function
-def dec_url(enc_url):
-    enc_url = enc_url.replace("helper://", "")
-    cipher = AES.new(KEY, AES.MODE_CBC, IV)
-    decrypted = unpad(cipher.decrypt(b64decode(enc_url)), AES.block_size)
-    return decrypted.decode('utf-8')
-
-# Function to split name & Encrypted URL
-def split_name_enc_url(line):
-    match = re.search(r"(helper://\S+)", line)
-    if match:
-        name = line[:match.start()].strip().rstrip(":")
-        enc_url = match.group(1).strip()
-        return name, enc_url
-    return line.strip(), None
-
-# Function to decrypt file URLs
-def decrypt_file_txt(input_file):
-    output_file = "decrypted_" + input_file
-    output_dir = os.path.dirname(output_file)
-    if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    with open(input_file, "r", encoding="utf-8") as f, open(output_file, "w", encoding="utf-8") as out:
-        for line in f:
-            name, enc_url = split_name_enc_url(line)
-            if enc_url:
-                dec = dec_url(enc_url)
-                out.write(f"{name}: {dec}\n")
-            else:
-                out.write(line.strip() + "\n")
-    return output_file
-
-# Get video duration using ffprobe
 def duration(filename):
-    try:
-        probe = ffmpeg.probe(filename)
-        duration = float(probe['format']['duration'])
-        logging.info(f"Duration of {filename}: {duration} seconds")
-        return duration
-    except ffmpeg.Error as e:
-        logging.error(f"Failed to get duration for {filename}: {str(e)}")
-        return 0
+    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
+                             "format=duration", "-of",
+                             "default=noprint_wrappers=1:nokey=1", filename],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    return float(result.stdout)
 
-# Get MPD and keys from API
 def get_mps_and_keys(api_url):
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()
-        response_json = response.json()
-        mpd = response_json.get('MPD')
-        keys = response_json.get('KEYS')
-        return mpd, keys
-    except requests.RequestException as e:
-        logging.error(f"Failed to fetch MPD and keys from {api_url}: {str(e)}")
-        return None, None
-
-# Execute shell command
+    response = requests.get(api_url)
+    response_json = response.json()
+    mpd = response_json.get('MPD')
+    keys = response_json.get('KEYS')
+    return mpd, keys
+   
 def exec(cmd):
-    try:
-        process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
-        output = process.stdout
-        logging.info(f"Command executed: {cmd}\nOutput: {output}")
+        process = subprocess.run(cmd, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        output = process.stdout.decode()
+        print(output)
         return output
-    except subprocess.SubprocessError as e:
-        logging.error(f"Command failed: {cmd}\nError: {str(e)}")
-        return ""
-
-# Run commands concurrently
+        #err = process.stdout.decode()
 def pull_run(work, cmds):
     with concurrent.futures.ThreadPoolExecutor(max_workers=work) as executor:
-        logging.info("Waiting for tasks to complete")
-        fut = executor.map(exec, cmds)
-
-# Async download for PDFs
-async def aio(url, name):
+        print("Waiting for tasks to complete")
+        fut = executor.map(exec,cmds)
+async def aio(url,name):
     k = f'{name}.pdf'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status == 200:
-                async with aiofiles.open(k, mode='wb') as f:
-                    await f.write(await resp.read())
-                logging.info(f"Downloaded PDF: {k}")
-                return k
-            logging.error(f"Failed to download PDF from {url}: Status {resp.status}")
-            return None
+                f = await aiofiles.open(k, mode='wb')
+                await f.write(await resp.read())
+                await f.close()
+    return k
 
-# Async download for PDFs (alternative)
-async def download(url, name):
+
+async def download(url,name):
     ka = f'{name}.pdf'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status == 200:
-                async with aiofiles.open(ka, mode='wb') as f:
-                    await f.write(await resp.read())
-                logging.info(f"Downloaded PDF: {ka}")
-                return ka
-            logging.error(f"Failed to download PDF from {url}: Status {resp.status}")
-            return None
+                f = await aiofiles.open(ka, mode='wb')
+                await f.write(await resp.read())
+                await f.close()
+    return ka
 
-# Download PDF with requests
 async def pdf_download(url, file_name, chunk_size=1024 * 10):
     if os.path.exists(file_name):
         os.remove(file_name)
-    try:
-        r = requests.get(url, allow_redirects=True, stream=True)
-        r.raise_for_status()
-        with open(file_name, 'wb') as fd:
-            for chunk in r.iter_content(chunk_size=chunk_size):
-                if chunk:
-                    fd.write(chunk)
-        logging.info(f"Downloaded PDF: {file_name}")
-        return file_name
-    except requests.RequestException as e:
-        logging.error(f"Failed to download PDF from {url}: {str(e)}")
-        return None
+    r = requests.get(url, allow_redirects=True, stream=True)
+    with open(file_name, 'wb') as fd:
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if chunk:
+                fd.write(chunk)
+    return file_name   
+   
 
-# Parse video info
 def parse_vid_info(info):
-    info = info.strip().split("\n")
+    info = info.strip()
+    info = info.split("\n")
     new_info = []
     temp = []
     for i in info:
@@ -204,118 +88,131 @@ def parse_vid_info(info):
         if "[" not in i and '---' not in i:
             while "  " in i:
                 i = i.replace("  ", " ")
-            i = i.strip().split("|")[0].split(" ", 2)
+            i.strip()
+            i = i.split("|")[0].split(" ",2)
             try:
                 if "RESOLUTION" not in i[2] and i[2] not in temp and "audio" not in i[2]:
                     temp.append(i[2])
                     new_info.append((i[0], i[2]))
-            except IndexError:
+            except:
                 pass
     return new_info
 
-# Parse video info into dictionary
+
 def vid_info(info):
-    info = info.strip().split("\n")
-    new_info = {}
+    info = info.strip()
+    info = info.split("\n")
+    new_info = dict()
     temp = []
     for i in info:
         i = str(i)
         if "[" not in i and '---' not in i:
             while "  " in i:
                 i = i.replace("  ", " ")
-            i = i.strip().split("|")[0].split(" ", 3)
+            i.strip()
+            i = i.split("|")[0].split(" ",3)
             try:
                 if "RESOLUTION" not in i[2] and i[2] not in temp and "audio" not in i[2]:
                     temp.append(i[2])
-                    new_info[i[2]] = i[0]
-            except IndexError:
+                    
+                    # temp.update(f'{i[2]}')
+                    # new_info.append((i[2], i[0]))
+                    #  mp4,mkv etc ==== f"({i[1]})" 
+                    
+                    new_info.update({f'{i[2]}':f'{i[0]}'})
+
+            except:
                 pass
     return new_info
 
-# Decrypt and merge video
+
 async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name, quality="720"):
     try:
         output_path = Path(output_path)
         output_path.mkdir(parents=True, exist_ok=True)
+
         cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate --external-downloader aria2c "{mpd_url}"'
-        logging.info(f"Running command: {cmd1}")
+        print(f"Running command: {cmd1}")
         os.system(cmd1)
+        
         avDir = list(output_path.iterdir())
-        logging.info(f"Downloaded files: {avDir}")
-        logging.info("Decrypting")
+        print(f"Downloaded files: {avDir}")
+        print("Decrypting")
+
         video_decrypted = False
         audio_decrypted = False
+
         for data in avDir:
             if data.suffix == ".mp4" and not video_decrypted:
                 cmd2 = f'mp4decrypt {keys_string} --show-progress "{data}" "{output_path}/video.mp4"'
-                logging.info(f"Running command: {cmd2}")
+                print(f"Running command: {cmd2}")
                 os.system(cmd2)
                 if (output_path / "video.mp4").exists():
                     video_decrypted = True
                 data.unlink()
             elif data.suffix == ".m4a" and not audio_decrypted:
                 cmd3 = f'mp4decrypt {keys_string} --show-progress "{data}" "{output_path}/audio.m4a"'
-                logging.info(f"Running command: {cmd3}")
+                print(f"Running command: {cmd3}")
                 os.system(cmd3)
                 if (output_path / "audio.m4a").exists():
                     audio_decrypted = True
                 data.unlink()
+
         if not video_decrypted or not audio_decrypted:
             raise FileNotFoundError("Decryption failed: video or audio file not found.")
+
         cmd4 = f'ffmpeg -i "{output_path}/video.mp4" -i "{output_path}/audio.m4a" -c copy "{output_path}/{output_name}.mp4"'
-        logging.info(f"Running command: {cmd4}")
+        print(f"Running command: {cmd4}")
         os.system(cmd4)
         if (output_path / "video.mp4").exists():
             (output_path / "video.mp4").unlink()
         if (output_path / "audio.m4a").exists():
             (output_path / "audio.m4a").unlink()
+        
         filename = output_path / f"{output_name}.mp4"
+
         if not filename.exists():
             raise FileNotFoundError("Merged video file not found.")
+
         cmd5 = f'ffmpeg -i "{filename}" 2>&1 | grep "Duration"'
         duration_info = os.popen(cmd5).read()
-        logging.info(f"Duration info: {duration_info}")
+        print(f"Duration info: {duration_info}")
+
         return str(filename)
+
     except Exception as e:
-        logging.error(f"Error during decryption and merging: {str(e)}")
+        print(f"Error during decryption and merging: {str(e)}")
         raise
 
-# Run shell command asynchronously
 async def run(cmd):
-    try:
-        proc = await asyncio.create_subprocess_shell(
-            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await proc.communicate()
-        logging.info(f'[{cmd!r} exited with {proc.returncode}]')
-        if proc.returncode == 1:
-            return False
-        if stdout:
-            return f'[stdout]\n{stdout.decode()}'
-        if stderr:
-            return f'[stderr]\n{stderr.decode()}'
-    except subprocess.SubprocessError as e:
-        logging.error(f"Failed to run command {cmd}: {str(e)}")
-        return False
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
 
-# Old download method
-def old_download(url, file_name, chunk_size=1024 * 10):
+    stdout, stderr = await proc.communicate()
+
+    print(f'[{cmd!r} exited with {proc.returncode}]')
+    if proc.returncode == 1:
+        return False
+    if stdout:
+        return f'[stdout]\n{stdout.decode()}'
+    if stderr:
+        return f'[stderr]\n{stderr.decode()}'
+
+    
+
+def old_download(url, file_name, chunk_size = 1024 * 10):
     if os.path.exists(file_name):
         os.remove(file_name)
-    try:
-        r = requests.get(url, allow_redirects=True, stream=True)
-        r.raise_for_status()
-        with open(file_name, 'wb') as fd:
-            for chunk in r.iter_content(chunk_size=chunk_size):
-                if chunk:
-                    fd.write(chunk)
-        logging.info(f"Downloaded file: {file_name}")
-        return file_name
-    except requests.RequestException as e:
-        logging.error(f"Failed to download from {url}: {str(e)}")
-        return None
+    r = requests.get(url, allow_redirects=True, stream=True)
+    with open(file_name, 'wb') as fd:
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if chunk:
+                fd.write(chunk)
+    return file_name
 
-# Convert size to human-readable format
+
 def human_readable_size(size, decimal_places=2):
     for unit in ['B', 'KB', 'MB', 'GB', 'TB', 'PB']:
         if size < 1024.0 or unit == 'PB':
@@ -323,285 +220,100 @@ def human_readable_size(size, decimal_places=2):
         size /= 1024.0
     return f"{size:.{decimal_places}f} {unit}"
 
-# Generate unique filename with timestamp
+
 def time_name():
     date = datetime.date.today()
     now = datetime.datetime.now()
     current_time = now.strftime("%H%M%S")
-    return f"{date}_{current_time}.mp4"
+    return f"{date} {current_time}.mp4"
 
-# Download video with retries
-async def download_video(url, cmd, name):
-    global failed_counter
-    failed_counter = 0
 
-    # Check if the URL is an .m3u8 playlist
-    is_m3u8 = ".m3u8" in url.lower()
-
-    # Base download command
+async def download_video(url,cmd, name):
     download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
-
-    # If it's an .m3u8 URL, process the playlist to start from the 3rd segment
-    temp_playlist = None
-    if is_m3u8:
-        try:
-            # Fetch the .m3u8 playlist
-            logging.info(f"Fetching playlist: {url}")
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
-            playlist_content = response.text
-
-            # Parse segments (lines that don't start with # and are not empty)
-            segments = [line.strip() for line in playlist_content.splitlines() 
-                       if line.strip() and not line.startswith('#') and not line.endswith('.m3u8')]
-
-            if len(segments) < 3:
-                logging.warning(f"Playlist has only {len(segments)} segments, downloading all available segments.")
-            else:
-                # Start from the 3rd segment (index 2 in 0-based indexing)
-                segment_urls = [urljoin(url, segment) for segment in segments[2:]]
-                if not segment_urls:
-                    logging.error("No valid segments found after the 2nd segment.")
-                    return f"{name}.mp4"
-
-                # Create a temporary .m3u8 file with segments starting from the 3rd
-                temp_playlist = f"temp_{name}.m3u8"
-                with open(temp_playlist, 'w') as f:
-                    f.write("#EXTM3U\n")
-                    for segment_url in segment_urls:
-                        f.write(f"{segment_url}\n")
-                logging.info(f"Created temporary playlist: {temp_playlist} with {len(segment_urls)} segments")
-
-                # Modify the download command to use the temporary playlist
-                download_cmd = download_cmd.replace(url, temp_playlist)
-
-        except requests.RequestException as e:
-            logging.error(f"Failed to fetch .m3u8 playlist: {str(e)}")
-            return f"{name}.mp4"
-
-    logging.info(f"Executing command: {download_cmd}")
-    
-    # Execute the download command
-    try:
-        k = subprocess.run(download_cmd, shell=True, capture_output=True, text=True)
-        logging.info(f"yt-dlp output: {k.stdout}")
-        if k.returncode != 0:
-            logging.error(f"Download failed with code {k.returncode}: {k.stderr}")
-    except Exception as e:
-        logging.error(f"Subprocess error: {str(e)}")
-        return f"{name}.mp4"
-    
-    # Handle retries for visionias URLs
-    if "visionias" in cmd.lower() and k.returncode != 0 and failed_counter <= 10:
+    global failed_counter
+    print(download_cmd)
+    logging.info(download_cmd)
+    k = subprocess.run(download_cmd, shell=True)
+    if "visionias" in cmd and k.returncode != 0 and failed_counter <= 10:
         failed_counter += 1
-        logging.warning(f"Download failed, retrying ({failed_counter}/10)...")
         await asyncio.sleep(5)
-        # Clean up temporary playlist if it exists
-        if temp_playlist and os.path.exists(temp_playlist):
-            os.remove(temp_playlist)
-        return await download_video(url, cmd, name)
-    
+        await download_video(url, cmd, name)
     failed_counter = 0
-    
-    # Clean up temporary playlist if it exists
-    if temp_playlist and os.path.exists(temp_playlist):
-        os.remove(temp_playlist)
-    
-    # Check for downloaded file with various extensions
     try:
-        possible_extensions = [".mp4", ".mkv", ".webm", ".mp4.webm"]
-        for ext in possible_extensions:
-            filename = f"{name}{ext}" if ext != ".mp4.webm" else f"{name}.mp4.webm"
-            if os.path.isfile(filename):
-                logging.info(f"Found downloaded file: {filename}")
-                return filename
-        
-        logging.error(f"Downloaded video not found for: {name}")
-        return f"{name}.mp4"
-    
+        if os.path.isfile(name):
+            return name
+        elif os.path.isfile(f"{name}.webm"):
+            return f"{name}.webm"
+        name = name.split(".")[0]
+        if os.path.isfile(f"{name}.mkv"):
+            return f"{name}.mkv"
+        elif os.path.isfile(f"{name}.mp4"):
+            return f"{name}.mp4"
+        elif os.path.isfile(f"{name}.mp4.webm"):
+            return f"{name}.mp4.webm"
+
+        return name
     except FileNotFoundError as exc:
-        logging.error(f"File not found: {name}: {str(exc)}")
-        return f"{name}.mp4"
-                # Modify the download command to use the temporary playlist
+        return os.path.isfile.splitext[0] + "." + "mp4"
 
-# Send document
+
 async def send_doc(bot: Client, m: Message, cc, ka, cc1, prog, count, name):
-    try:
-        reply = await m.reply_text(
-            f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🐦"
-        )
-        await asyncio.sleep(1)
-        start_time = time.time()
-        await bot.send_document(ka, caption=cc1)
-        count += 1
-        await reply.delete(True)
-        os.remove(ka)
-        logging.info(f"Uploaded and deleted document: {ka}")
-        await asyncio.sleep(3)
-        return count
-    except Exception as e:
-        logging.error(f"Failed to send document {ka}: {str(e)}")
-        await m.reply_text(f"Error uploading document: {str(e)}")
-        return count
+    reply = await m.reply_text(f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » {name}\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ 𝙎𝘼𝙄𝙉𝙄 𝘽𝙊𝙏𝙎🐦")
+    time.sleep(1)
+    start_time = time.time()
+    await bot.send_document(ka, caption=cc1)
+    count+=1
+    await reply.delete (True)
+    time.sleep(1)
+    os.remove(ka)
+    time.sleep(3) 
 
-# Decrypt file in-place
-def decrypt_file(file_path, key):
-    if not os.path.exists(file_path):
-        logging.error(f"File not found for decryption: {file_path}")
-        return False
-    try:
-        with open(file_path, "r+b") as f:
-            num_bytes = min(28, os.path.getsize(file_path))
-            with mmap.mmap(f.fileno(), length=num_bytes, access=mmap.ACCESS_WRITE) as mmapped_file:
-                for i in range(num_bytes):
-                    mmapped_file[i] ^= ord(key[i]) if i < len(key) else i
-        logging.info(f"File decrypted successfully: {file_path}")
-        return True
-    except Exception as e:
-        logging.error(f"Failed to decrypt file {file_path}: {str(e)}")
-        return False
 
-# Download and decrypt video
-async def download_and_decrypt_video(url, cmd, name, key):
-    video_path = await download_video(url, cmd, name)
-    if video_path:
-        decrypted = decrypt_file(video_path, key)
-        if decrypted:
-            logging.info(f"File decrypted successfully: {video_path}")
-            return video_path
-        else:
-            logging.error(f"Failed to decrypt {video_path}")
-            return None
-    logging.error(f"Failed to download video: {name}")
-    return None
+def decrypt_file(file_path, key):  
+    if not os.path.exists(file_path): 
+        return False  
 
-# Updated send_vid function using ffmpeg-python
-async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
+    with open(file_path, "r+b") as f:  
+        num_bytes = min(28, os.path.getsize(file_path))  
+        with mmap.mmap(f.fileno(), length=num_bytes, access=mmap.ACCESS_WRITE) as mmapped_file:  
+            for i in range(num_bytes):  
+                mmapped_file[i] ^= ord(key[i]) if i < len(key) else i 
+    return True  
+
+async def download_and_decrypt_video(url, cmd, name, key):  
+    video_path = await download_video(url, cmd, name)  
+    
+    if video_path:  
+        decrypted = decrypt_file(video_path, key)  
+        if decrypted:  
+            print(f"File {video_path} decrypted successfully.")  
+            return video_path  
+        else:  
+            print(f"Failed to decrypt {video_path}.")  
+            return None  
+
+async def send_vid(bot: Client, m: Message,cc,filename,thumb,name,prog):
+    subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:10 -vframes 1 "{filename}.jpg"', shell=True)
+    await prog.delete (True)
+    reply = await m.reply_text(f"**Generate Thumbnail:**\n{name}")
     try:
-        # Create temporary file names
-        trimmed_filename = f"trimmed_{filename}"
-        thumbnail_filename = f"{filename}.jpg"
-        
-        # Log input file details
-        logging.info(f"Processing video: {filename}")
-        if not os.path.exists(filename):
-            raise FileNotFoundError(f"Input video file not found: {filename}")
-        
-        # Get input video details
-        file_size = os.path.getsize(filename)
-        original_duration = duration(filename)
-        logging.info(f"Input video: size={human_readable_size(file_size)}, duration={original_duration} seconds")
-        
-        # Step 1: Try stream copy for fast trimming
-        logging.info(f"Attempting stream copy trim: {filename} -> {trimmed_filename}")
-        result = subprocess.run(
-            f'ffmpeg -i "{filename}" -ss 00:00:10 -c:v copy -c:a copy "{trimmed_filename}"',
-            shell=True,
-            capture_output=True,
-            text=True
-        )
-        if result.returncode != 0 or not os.path.exists(trimmed_filename):
-            logging.warning(f"Stream copy failed: {result.stderr}. Falling back to re-encoding.")
-            # Step 2: Re-encode with ultrafast preset and duration limit
-            trimmed_duration = max(0, original_duration - 10)  # Remaining duration
-            result = subprocess.run(
-                f'ffmpeg -i "{filename}" -ss 00:00:10 -t {trimmed_duration} -c:v libx264 -c:a aac -preset ultrafast -threads 0 "{trimmed_filename}"',
-                shell=True,
-                capture_output=True,
-                text=True
-            )
-            if result.returncode != 0:
-                logging.error(f"Re-encoding failed: {result.stderr}")
-                raise subprocess.CalledProcessError(result.returncode, result.args, result.stderr)
-        logging.info(f"Trimmed video created: {trimmed_filename}")
-        
-        # Step 3: Verify trimmed file
-        if not os.path.exists(trimmed_filename):
-            raise FileNotFoundError(f"Trimmed video file not created: {trimmed_filename}")
-        trimmed_size = os.path.getsize(trimmed_filename)
-        trimmed_duration = duration(trimmed_filename)
-        logging.info(f"Trimmed video: size={human_readable_size(trimmed_size)}, duration={trimmed_duration} seconds")
-        if trimmed_duration >= original_duration:
-            logging.error(f"Trimming failed: trimmed duration ({trimmed_duration}s) not less than original ({original_duration}s)")
-            raise ValueError("Video was not trimmed correctly")
-        
-        # Step 4: Generate thumbnail
-        logging.info(f"Generating thumbnail: {trimmed_filename} -> {thumbnail_filename}")
-        result = subprocess.run(
-            f'ffmpeg -i "{trimmed_filename}" -ss 00:00:00 -vframes 1 "{thumbnail_filename}"',
-            shell=True,
-            capture_output=True,
-            text=True
-        )
-        if result.returncode != 0:
-            logging.warning(f"Thumbnail generation failed: {result.stderr}")
-            thumbnail_filename = None
-        else:
-            logging.info(f"Thumbnail created: {thumbnail_filename}")
-        
-        # Step 5: Delete progress message
-        await prog.delete(True)
-        reply = await m.reply_text(
-            f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » `{name}`\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ELIESE🦁"
-        )
-        
-        # Step 6: Set thumbnail
         if thumb == "/d":
-            thumbnail = thumbnail_filename if os.path.exists(thumbnail_filename) else None
+            thumbnail = f"{filename}.jpg"
         else:
             thumbnail = thumb
-        
-        # Step 7: Check file size (Telegram limit: 2GB)
-        if trimmed_size > 2 * 1024 * 1024 * 1024:  # 2GB
-            raise ValueError(f"Trimmed video exceeds Telegram's 2GB limit: {human_readable_size(trimmed_size)}")
-        
-        start_time = time.time()
-        
-        # Step 8: Upload video
-        try:
-            await m.reply_video(
-                trimmed_filename,
-                caption=cc,
-                supports_streaming=True,
-                height=720,
-                width=1280,
-                thumb=thumbnail,
-                duration=int(trimmed_duration),
-                progress=progress_bar,
-                progress_args=(reply, start_time)
-            )
-            logging.info(f"Uploaded video: {trimmed_filename}")
-        except Exception as e:
-            logging.warning(f"Video upload failed, trying document: {str(e)}")
-            await m.reply_document(
-                trimmed_filename,
-                caption=cc,
-                progress=progress_bar,
-                progress_args=(reply, start_time)
-            )
-            logging.info(f"Uploaded document: {trimmed_filename}")
-    except FileNotFoundError as e:
-        logging.error(f"File error: {str(e)}")
-        await m.reply_text(f"Error: {str(e)}")
-    except subprocess.CalledProcessError as e:
-        logging.error(f"FFmpeg processing failed: {e.stderr}")
-        await m.reply_text(f"Error processing video: FFmpeg failed - {e.stderr}")
-    except ValueError as e:
-        logging.error(f"Validation error: {str(e)}")
-        await m.reply_text(f"Error: {str(e)}")
+            
     except Exception as e:
-        logging.error(f"Error in send_vid: {str(e)}")
-        await m.reply_text(f"Error uploading video: {str(e)}")
+        await m.reply_text(str(e))
+      
+    dur = int(duration(filename))
+    start_time = time.time()
+
+    try:
+        await m.reply_video(filename,caption=cc, supports_streaming=True,height=720,width=1280,thumb=thumbnail,duration=dur, progress=progress_bar,progress_args=(reply,start_time))
+    except Exception:
+        await m.reply_document(filename,caption=cc, progress=progress_bar,progress_args=(reply,start_time))
+    
     finally:
-        # Clean up files (keep original for debugging)
-        for file in [trimmed_filename, thumbnail_filename]:
-            if file and os.path.exists(file):
-                try:
-                    os.remove(file)
-                    logging.info(f"Deleted file: {file}")
-                except OSError as e:
-                    logging.error(f"Failed to delete file {file}: {str(e)}")
-        try:
-            await reply.delete(True)
-        except NameError:
-            pass  # Reply might not be defined if an early error occurs
+        await reply.delete(True)
+        os.remove(filename)
+        os.remove(f"{filename}.jpg")
