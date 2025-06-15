@@ -528,7 +528,7 @@ async def txt_handler(bot: Client, m: Message):
                         "_clck": "1hjjwnc|2|fw3|0|1967",
                         "verified_task": "dHJ1ZQ==",
                         "countdown_end_time": "MTc0ODc0OTI5NTc3Ng==",
-                        "auth_token": "cu7oiBffDQbRGx7%2FOhKylmKZYPBubC4Euenu4PkHPj%2FOyu1vuQDaiYALB5VP7gczcYlhA9PGToB26hw3XeVD1EO28r%2FfogK0u5OLUYwZncdEWirRYMgIfW3GGyS0%2B8e6GOy5xOHFUqOo7k70qZDdPSZsM%2FaHHguTY34V6qZxO9vTeK2v74gSJeZ5KP9sIbmgCuUBoi95w1MB48MzyW4zQ2W7ATYxcGAN24HFw%2Fw%2F490Umcp14ErnrPVi6Plt8dbCZg3Lh5mIjZ2iJZH3teaBXjiEMLv3f%2B4IZ7aJdUjr3Rfv0vtLEuwR1McgH%2BknN5uYKkSD%2FwOasz%2Fr6q3wFKYgH1Uu8DKoW6xS8BW2Vv2KvZD6Q0FkNKdXszxsy2rsxJLsneNojqL3J8ZY5N5khrpK7q4SZKHkcW51pUZpWstJHed4qmhyY7iYNEaXmtqHpeWitA4jmfkWAw5oa9uE3YxcIcD%2FyyN67dNwTRizWxdunELdQqa%2BSLteCVb8JvfzGM0ajIWqD3HJ3t0F%2BWlsp3DlbJrPUVjzAGxWi%2FFf57v0AcQb2b8zrOd0D3u%2BwRlH7OJCsNzGA7a9l4wn%2FPtmeTv%2FOKOomFP2xxMtRPJkNjZgBaA07PVnWXUrFOD8pyzpaEabkxg4gSF%2FJd0ZFTQHiOWTvpfQZUuN90%2FKAfkMNDJHx64w2jpmx51Dnja3Lis%2FhkGu%2BJ6xt3tSNH6np2XyyU8J3%2FMfsNvMRPNac9cHrDl9bYM%3D"
+                        "auth_token": f"{raw_text4}"
                     }
 
                     # Send async GET request to play.php
