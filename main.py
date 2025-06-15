@@ -561,8 +561,8 @@ async def txt_handler(bot: Client, m: Message):
                                 if attempt < max_retries - 1:
                                     await asyncio.sleep(retry_delay)
                         else:
-                print(f"Failed to extract real_url for {video_title} after {max_retries} retries")
-                real_url = decoded_url if decoded_url else None
+                            print(f"Failed to extract real_url for {video_title} after {max_retries} retries")
+                            real_url = decoded_url if decoded_url else None
                 except Exception as e:
                     print(f"Error processing streamfiles URL {url}: {e}")
                     real_url = decoded_url if decoded_url else None
