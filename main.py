@@ -616,7 +616,94 @@ async def txt_handler(bot: Client, m: Message):
                             continue
                     else:
                         url = f"{new_url}"
+
+            elif url.startswith("https://rarestudy.site/media"):
+                async def fetch_url(session: ClientSession, url: str, retries: int = 10, delay: float = 1.0) -> str:
+                    for attempt in range(1, retries + 1):
+                        try:
+                            async with session.get(url, timeout=10) as response:
+                                if response.status >= 500:  # Server errors
+                                    raise ClientError(f"Server error: {response.status}")
+                                response.raise_for_status()  # Check for 4xx/5xx errors
+                                return await response.text()
+                        except (ClientError, asyncio.TimeoutError) as e:
+                            if attempt == retries:
+                                raise Exception(f"Failed after {retries} attempts: {e}")
+                            print(f"Attempt {attempt} failed: {e}. Retrying in {delay * attempt} seconds...")
+                            await asyncio.sleep(delay * attempt)  # Exponential backoff
+
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        # Fetch the response with retries
+                        script_content = await fetch_url(session, url)
+            
+                        # Extract the videoData object from the <script> tag
+                        match = re.search(r'const videoData = (\{.*?\});', script_content, re.DOTALL)
+            
+                        if match:
+                            # Get the JSON string and parse it
+                            video_data_str = match.group(1)
+                            video_data = json.loads(video_data_str)
                 
+                            # Extract the full URL from the 'url' field
+                            real_url = video_data.get('url', '')
+                            if not real_url:
+                                print("No URL found in videoData")
+                                real_url = None
+                        else:
+                            print("videoData object not found in response")
+                            real_url = None
+                
+                        # Process real_url to generate new_url
+                        if real_url:
+                            max_retries = 3
+                            retry_delay = 2  # Delay in seconds between retries
+                            for attempt in range(max_retries):
+                                try:
+                                    # Extract base path and query parameters
+                                    base_path = real_url.split('?')[0].replace('master.mpd', '')
+                                    query_params = real_url.split('?')[1] if '?' in real_url else ''
+                                    # Construct new m3u8 URL
+                                    new_url = f"{base_path}hls/720/main.m3u8" + (f"?{query_params}" if query_params else '')
+                                    new_url = new_url.replace(
+                                        "https://sec-prod-mediacdn.pw.live",
+                                        "https://anonymousrajputplayer-9ab2f2730a02.herokuapp.com/sec-prod-mediacdn.pw.live"
+                                    )
+                                    # Prepare API request
+                                    api_url = "https://api-accesstoken.vercel.app"
+                                    headers = {"Content-Type": "application/json"}
+                                    # Send async GET request
+                                    async with session.get(api_url, headers=headers) as response:
+                                        if response.status == 200:
+                                            response_data = await response.json()
+                                            # Check for required key
+                                            if 'access_token' in response_data:
+                                                url = f"{new_url}&token={response_data['access_token']}"
+                                                print(f"Generated new_url with token: {url}")
+                                                break
+                                            else:
+                                                url = f"{new_url}"  # No token, use new_url
+                                                print(f"No access_token in API response, using: {url}")
+                                                break
+                                        else:
+                                            print(f"API request failed, status: {response.status}")
+                                            if attempt < max_retries - 1:
+                                                await asyncio.sleep(retry_delay)
+                                            continue
+                                except aiohttp.ClientError as e:
+                                    print(f"Attempt {attempt + 1} failed: {e}")
+                                    if attempt < max_retries - 1:
+                                        await asyncio.sleep(retry_delay)
+                                    continue
+                                except Exception as e:
+                                    print(f"Unexpected error on attempt {attempt + 1}: {e}")
+                                    if attempt < max_retries - 1:
+                                        await asyncio.sleep(retry_delay)
+                                    continue
+                            else:
+                                url = f"{new_url}"
+                    
+        
             elif 'encrypted.m' in url:
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
