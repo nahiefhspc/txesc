@@ -421,7 +421,7 @@ async def txt_handler(bot: Client, m: Message):
             link0 = "https://" + Vxy
 
             name1 = links[i][0].replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
-            name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{name1[:60]}'
+            name = f'[�_H𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{name1[:60]}'
             
             if "visionias" in url:
                 async with ClientSession() as session:
@@ -688,6 +688,10 @@ async def txt_handler(bot: Client, m: Message):
                                     continue
                             else:
                                 url = f"{new_url}"
+
+            elif "encrypted.m" in url:
+                appxkey = url.split('*')[1]
+                url = url.split('*')[0]
 
             if "youtu" in url:
                 ytf = f"b[height<={raw_text2}][ext=mp4]/bv[height<={raw_text2}][ext=mp4]+ba[ext=m4a]/b[ext=mp4]"
