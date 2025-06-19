@@ -689,10 +689,6 @@ async def txt_handler(bot: Client, m: Message):
                             else:
                                 url = f"{new_url}"
 
-            elif 'encrypted.m' in url:
-                appxkey = url.split('*')[1]
-                url = url.split('*')[0]
-
             if "youtu" in url:
                 ytf = f"b[height<={raw_text2}][ext=mp4]/bv[height<={raw_text2}][ext=mp4]+ba[ext=m4a]/b[ext=mp4]"
             elif "embed" in url:
