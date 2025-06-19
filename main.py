@@ -606,7 +606,7 @@ async def txt_handler(bot: Client, m: Message):
                         url = f"{new_url}"
 
             elif url.startswith("https://rarestudy.site/media"):
-                async def fetch_url(session: ClientSession, url: str, retries: int = 10, delay: float = 1.0) -> str:
+                async def fetch_url(session: ClientSession, url: str, retries: int = 30, delay: float = 2.0) -> str:
                     for attempt in range(1, retries + 1):
                         try:
                             async with session.get(url, timeout=10) as response:
@@ -635,7 +635,7 @@ async def txt_handler(bot: Client, m: Message):
                             print("videoData object not found in response")
                             real_url = None
                         if real_url:
-                            max_retries = 3
+                            max_retries = 30
                             retry_delay = 2
                             for attempt in range(max_retries):
                                 try:
