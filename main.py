@@ -380,14 +380,6 @@ async def txt_handler(bot: Client, m: Message):
     except Exception:
         res = "UN"
 
-    await editable.edit("`🔹Enter Your Name\n🔹Send 1 for use default`")
-    input3: Message = await bot.listen(editable.chat.id)
-    raw_text3 = input3.text
-    await input3.delete()
-    if raw_text3 == '1':
-        CR = '[𝄟⃝‌🐬🇳‌ɪᴋʜɪʟ𝄟⃝🐬](https://t.me/+MdZ2996M2G43MWFl)'
-    else:
-        CR = raw_text3
 
     await editable.edit("🔹Enter Your PW Token For 𝐌𝐏𝐃 𝐔𝐑𝐋\n🔹Send /d for use default")
     input4: Message = await bot.listen(editable.chat.id)
@@ -485,10 +477,10 @@ async def txt_handler(bot: Client, m: Message):
 
             elif "rarestudy22" in url:
                 # Inline retry function
-                def fetch_with_retries(local_url, headers=None, max_retries=3):
+                def fetch_with_retries(local_url, headers=None, max_retries=10):
                     for attempt in range(max_retries):
                         try:
-                            response = requests.get(local_url, headers=headers, timeout=10)
+                            response = requests.get(local_url, headers=headers, timeout=5)
                             response.raise_for_status()
                             return response
                         except requests.RequestException as e:
@@ -506,7 +498,7 @@ async def txt_handler(bot: Client, m: Message):
                     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
                     'cache-control': 'no-cache',
-                    'cookie': 'cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session=.eJxlkktz4kgQhP8L59mJqu6ufsyN5WWxixTYMgJdHCCwEQhMYDBGG_vfN3siZi4bcOnuqsovs_RP5-W0OR-Wx83x0vlxOV833zqv9fFtcz6d6-Pl5fK-3xw7PzrsRchqImWMYxFPzI4845JdMKJEWWZlhYJo75U2lozTgQPh77R2lrQOwYnV8cTimbXBFAnOkFFWKeOVN0pb69kTOUXiNDkxPngDDVKkgohzgTVJUHhnx95CLxhPHtOtC0LOWYseh2LCtRgdwIn50FUqKIy3ULLWWS9OwOQUUMRZbRSOcBl8tKSc1yJWhIPC2bHygcDKilhjFhtmGDJshAAKIksON0opATA7FZmUdkEzzAYKBrUARRYG1GBxRmM4EjUWQibANmlUMbL2DoFoVEcjAU0OPBYUTKSRimOQehNzdAazDMWgA3qF0C4W-XtsxCDKYEk0hmJlzlG0o60JXtCEsdGDh4jRQmyCxs-hA3oehiz8w1aAoCaLjSEA7FxH6CjrPPxIYMuWFHLFp-FB4bEgyNkQ4E2Fn9vGR6S08t4jFoXNOBstolMDRQNQpPOt8-ub29zHtJl366we_zXjaf13b7xdjap4Tp7bhNN6HL6jqNk8oGg30Gk-NZO2e0_7z9fJbs9o2C_mj9tkd3JJE05lL7HJbqHL_uC-aAdt1m8OZf9xX-7-3JaHCZfFsMmeko_kOGvL-fi6KLhJdu91lg8k63dN2q9uk_h-KE_VMaX8MLyUT5i5H8p6nr4n9a1ejYbteiDbVfEcQafQb1a92BPupRpel_PTdj1qPld1YsH-uiymqEugnbRZnjZlvufyMKzTdqqy0UBnxfQr6--jeV0W43aJeZGpGm2lUs2u0muE8rVd9mS3UhTrfnM__69mHPDerIrhaRWzOJanxWEo1WhIZXHjtH0zWb7tloq3y-J2XahwiZ6qQ_go55M6az7qtEjuqRrvs3zBWX96L5HzBJxpu92lh9khaQhe0891IVQdmwf0chW19k0WZ60fmtvPzJpZ_jhL6tenW70shgTer7R9pskOi-1P-XX6vZ2baryYkuT33vjprF5SM--PzmXylvcSGV2um-6nPBz_uKaTzr__Ab-HS_k.aJAfrA.0E6XZoJJY8XVrMc2xhanrHjcqRg',
+                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={raw_text4}",
                     'pragma': 'no-cache',
                     'referer': 'https://rarestudy22-e3c80f6989c8.herokuapp.com/batches',
                     'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
@@ -559,7 +551,7 @@ async def txt_handler(bot: Client, m: Message):
 
                     # Step 6: Build final HLS URL
                     if access_token:
-                        hls_url = transformed_video_url.replace("master.mpd", "hls/720/main.m3u8")
+                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{raw_text2}/main.m3u8")
                         url = f"{hls_url}&token={access_token}"
                     else:
                         print("❌ Access token missing, skipping transformation.")
