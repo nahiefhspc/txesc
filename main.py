@@ -943,7 +943,7 @@ async def txt_handler(bot: Client, m: Message):
                     continue
                 
             except Exception as e:
-                await m.reply_text(f'⚠️**Downloading Failed**⚠️\n**Name** =>> `{str(count).zfill(3)} {name1}`\n**Url** =>> {link0}', disable_web_page_preview=True)
+                await m.reply_text(f'⚠️**Downloading Failed**⚠️\n**ID** =>> {str(count).zfill(3)}\n\n**COPY** =>> `{name1}:{link0}`', disable_web_page_preview=True)
                 count += 1
                 failed_count += 1
                 continue
