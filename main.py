@@ -394,6 +394,11 @@ async def txt_handler(bot: Client, m: Message):
     raw_text4 = input4.text
     await input4.delete()
 
+    await editable.edit("🔹Enter Your PW Token 😔 2nd wala Bro\n🔹Send /d for use default")
+    input20: Message = await bot.listen(editable.chat.id)
+    raw_text20 = input20.text
+    await input20.delete()    
+
     await editable.edit(f"🔹Send the Video Thumb URL\n🔹Send /d for use default\n\n🔹You can direct upload thumb\n🔹Send **No** for use default")
     input6: Message = await bot.listen(editable.chat.id)
     raw_text6 = input6.text
@@ -560,7 +565,8 @@ async def txt_handler(bot: Client, m: Message):
                     # Step 6: Build final HLS URL
                     if access_token:
                         hls_url = transformed_video_url.replace("master.mpd", f"hls/{raw_text2}/main.m3u8")
-                        url = f"{hls_url}&token={access_token}"
+                        #url = f"{hls_url}&token={access_token}"
+                        url = f"{hls_url}&token={raw_text20}"
                     else:
                         print("❌ Access token missing, skipping transformation.")
                 else:
@@ -665,7 +671,8 @@ async def txt_handler(bot: Client, m: Message):
                                     if response.status == 200:
                                         response_data = await response.json()
                                         if 'access_token' in response_data:
-                                            url = f"{new_url}&token={response_data['access_token']}"
+                                            #url = f"{new_url}&token={response_data['access_token']}"
+                                            url = f"{new_url}&token={raw_text20}"
                                             print(f"Generated new_url with token: {url}")
                                             break
                                         else:
