@@ -488,7 +488,7 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url = response.json()['url']
 
-            elif "rarestudy22" in url:
+            elif "rarestudy22" in url or 'media' in url:
                 # Inline retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=10):
                     for attempt in range(max_retries):
@@ -565,8 +565,8 @@ async def txt_handler(bot: Client, m: Message):
                     # Step 6: Build final HLS URL
                     if access_token:
                         hls_url = transformed_video_url.replace("master.mpd", f"hls/{raw_text2}/main.m3u8")
-                        #url = f"{hls_url}&token={access_token}"
-                        url = f"{hls_url}&token={raw_text20}"
+                        url = f"{hls_url}&token={access_token}"
+                        #url = f"{hls_url}&token={raw_text20}"
                     else:
                         print("❌ Access token missing, skipping transformation.")
                 else:
@@ -653,8 +653,8 @@ async def txt_handler(bot: Client, m: Message):
                     real_url = decoded_url if decoded_url else None
 
                 if real_url:
-                    max_retries = 3
-                    retry_delay = 2
+                    max_retries = 10
+                    retry_delay = 3
                     for attempt in range(max_retries):
                         try:
                             base_path = real_url.split('?')[0].replace('master.mpd', '')
@@ -671,8 +671,8 @@ async def txt_handler(bot: Client, m: Message):
                                     if response.status == 200:
                                         response_data = await response.json()
                                         if 'access_token' in response_data:
-                                            #url = f"{new_url}&token={response_data['access_token']}"
-                                            url = f"{new_url}&token={raw_text20}"
+                                            url = f"{new_url}&token={response_data['access_token']}"
+                                            #url = f"{new_url}&token={raw_text20}"
                                             print(f"Generated new_url with token: {url}")
                                             break
                                         else:
