@@ -451,38 +451,7 @@ async def txt_handler(bot: Client, m: Message):
 
             elif "acecwply" in url:
                 cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
-
-            elif "https://cpvod.testbook.com/" in url:
-                url = url.replace("https://cpvod.testbook.com/","https://media-cdn.classplusapp.com/drm/")
-                url = 'https://dragoapi.vercel.app/classplus?link=' + url
-                mpd, keys = await helper.get_mps_and_keys(url)
-                url = mpd
-                keys_string = " ".join([f"--key {key}" for key in keys])
-
-            elif "classplusapp.com/drm/" in url:
-                url = 'https://dragoapi.vercel.app/classplus?link=' + url
-                mpd, keys = await helper.get_mps_and_keys(url)
-                url = mpd
-                keys_string = " ".join([f"--key {key}" for key in keys])
-
-            elif "tencdn.classplusapp" in url:
-                headers = {
-                    'Host': 'api.classplusapp.com',
-                    'x-access-token': f'{token_cp}',
-                    'user-agent': 'Mobile-Android',
-                    'app-version': '1.4.37.1',
-                    'api-version': '18',
-                    'device-id': '5d0d17ac8b3c9f51',
-                    'device-details': '2848b866799971ca_2848b8667a33216c_SDK-30',
-                    'accept-encoding': 'gzip'
-                }
-                params = (('url', f'{url}'))
-                response = requests.get('https://api.classplusapp.com/cams/uploader/video/jw-signed-url', headers=headers, params=params)
-                url = response.json()['url']  
-
-            elif 'videos.classplusapp' in url or "tencdn.classplusapp" in url or "webvideos.classplusapp.com" in url:
-                url = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers={'x-access-token': f'{token_cp}'}).json()['url']
-            
+                                    
             elif 'media-cdn.classplusapp.com' in url or 'media-cdn-alisg.classplusapp.com' in url or 'media-cdn-a.classplusapp.com' in url: 
                 headers = {'x-access-token': f'{token_cp}', "X-CDN-Tag": "empty"}
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
@@ -572,83 +541,6 @@ async def txt_handler(bot: Client, m: Message):
                         print(f"❌ Error getting final stream URL: {e}")
                         url = real_url
 
-
-
-            elif url.startswith("https://rarestudy.site/media"):
-                async def fetch_url(session: ClientSession, url: str, retries: int = 30, delay: float = 2.0) -> str:
-                    for attempt in range(1, retries + 1):
-                        try:
-                            async with session.get(url, timeout=10) as response:
-                                if response.status >= 500:
-                                    raise aiohttp.ClientError(f"Server error: {response.status}")
-                                response.raise_for_status()
-                                return await response.text()
-                        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                            if attempt == retries:
-                                raise Exception(f"Failed after {retries} attempts: {e}")
-                            print(f"Attempt {attempt} failed: {e}. Retrying in {delay * attempt} seconds...")
-                            await asyncio.sleep(delay * attempt)
-
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        script_content = await fetch_url(session, url)
-                        match = re.search(r'const videoData = (\{.*?\});', script_content, re.DOTALL)
-                        if match:
-                            video_data_str = match.group(1)
-                            video_data = json.loads(video_data_str)
-                            real_url = video_data.get('url', '')
-                            if not real_url:
-                                print("No URL found in videoData")
-                                real_url = None
-                        else:
-                            print("videoData object not found in response")
-                            real_url = None
-                        if real_url:
-                            max_retries = 30
-                            retry_delay = 2
-                            for attempt in range(max_retries):
-                                try:
-                                    base_path = real_url.split('?')[0].replace('master.mpd', '')
-                                    query_params = real_url.split('?')[1] if '?' in real_url else ''
-                                    new_url = f"{base_path}hls/720/main.m3u8" + (f"?{query_params}" if query_params else '')
-                                    new_url = new_url.replace(
-                                        "https://sec-prod-mediacdn.pw.live",
-                                        "https://anonymousrajputplayer-9ab2f2730a02.herokuapp.com/sec-prod-mediacdn.pw.live"
-                                    )
-                                    api_url = "https://api-accesstoken.vercel.app"
-                                    headers = {"Content-Type": "application/json"}
-                                    async with session.get(api_url, headers=headers) as response:
-                                        if response.status == 200:
-                                            response_data = await response.json()
-                                            if 'access_token' in response_data:
-                                                url = f"{new_url}&token={response_data['access_token']}"
-                                                print(f"Generated new_url with token: {url}")
-                                                break
-                                            else:
-                                                url = f"{new_url}"
-                                                print(f"No access_token in API response, using: {url}")
-                                                break
-                                        else:
-                                            print(f"API request failed, status: {response.status}")
-                                            if attempt < max_retries - 1:
-                                                await asyncio.sleep(retry_delay)
-                                            continue
-                                except aiohttp.ClientError as e:
-                                    print(f"Attempt {attempt + 1} failed: {e}")
-                                    if attempt < max_retries - 1:
-                                        await asyncio.sleep(retry_delay)
-                                    continue
-                                except Exception as e:
-                                    print(f"Unexpected error on attempt {attempt + 1}: {e}")
-                                    if attempt < max_retries - 1:
-                                        await asyncio.sleep(retry_delay)
-                                    continue
-                            else:
-                                url = f"{new_url}"
-                except Exception as e:
-                    print(f"Error processing rarestudy URL {url}: {e}")
-                    real_url = None
-
             elif "encrypted.m" in url:
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
@@ -729,12 +621,6 @@ async def txt_handler(bot: Client, m: Message):
                     time.sleep(5)
                     continue
                             
-                elif ".zip" in url:
-                    BUTTONSZIP = InlineKeyboardMarkup([[InlineKeyboardButton(text="🎥 ZIP STREAM IN PLAYER", url=f"{url}")]])
-                    await bot.send_photo(chat_id=m.chat.id, photo=photozip, caption=cczip, reply_markup=BUTTONSZIP)
-                    count += 1
-                    time.sleep(1)    
-                    continue
 
                 elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
                     ext = url.split('.')[-1]
@@ -758,57 +644,6 @@ async def txt_handler(bot: Client, m: Message):
                     time.sleep(1)
                     continue
                     
-                elif 'encrypted.m' in url:    
-                    remaining_links = len(links) - count
-                    progress = (count / len(links)) * 100
-                    emoji_message = await show_random_emojis(m)
-                    Show = f"🚀𝐏𝐫𝐨𝐠𝐫𝐞𝐬𝐬 » {progress:.2f}%\n┃\n" \
-                           f"┣🔗𝐈𝐧𝐝𝐞𝐱 » {count}/{len(links)}\n┃\n" \
-                           f"╰━🖇️𝐑𝐞𝐦𝐚𝐢𝐧 𝐋𝐢𝐧𝐤𝐬 » {remaining_links}\n" \
-                           f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Eɴᴄʀʏᴘᴛᴇᴅ Sᴛᴀʀᴛᴇᴅ...⏳**\n┃\n" \
-                           f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
-                           f"╰━📚𝐁𝐚𝐭𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
-                           f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
-                           f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"🛑**Send** /stop **to stop process**\n┃\n" \
-                           f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ [ELIESE🐦](https://t.me/+MdZ2996M2G43MWFl)"                    
-                    prog = await m.reply_text(Show, disable_web_page_preview=True)
-                    res_file = await helper.download_and_decrypt_video(url, cmd, name, appxkey)
-                    filename = res_file
-                    await emoji_message.delete()
-                    await prog.delete()
-                    await helper.send_vid(bot, m, cc, filename, thumb, name, prog)
-                    count += 1
-                    await asyncio.sleep(1)
-                    continue
-
-                elif 'drmcdni' in url or 'drm/wv' in url:
-                    remaining_links = len(links) - count
-                    progress = (count / len(links)) * 100
-                    emoji_message = await show_random_emojis(m)
-                    Show = f"🚀𝐏𝐫𝐨𝐠𝐫𝐞𝐬𝐬 » {progress:.2f}%\n┃\n" \
-                           f"┣🔗𝐈𝐧𝐝𝐞𝐱 » {count}/{len(links)}\n┃\n" \
-                           f"╰━🖇️𝐑𝐞𝐦𝐚𝐢𝐧 𝐋𝐢𝐧𝐤𝐬 » {remaining_links}\n" \
-                           f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Dʀᴍ Sᴛᴀʀᴛᴇᴅ...⏳**\n┃\n" \
-                           f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
-                           f"╰━📚𝐁𝐚𝐭𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
-                           f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
-                           f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"🛑**Send** /stop **to stop process**\n┃\n" \
-                           f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ [ELIESE🐦](https://t.me/+MdZ2996M2G43MWFl)"                    
-                    prog = await m.reply_text(Show, disable_web_page_preview=True)
-                    res_file = await helper.decrypt_and_merge_video(mpd, keys_string, path, name, raw_text2)
-                    filename = res_file
-                    await emoji_message.delete()
-                    await prog.delete()
-                    await helper.send_vid(bot, m, cc, filename, thumb, name, prog)
-                    count += 1
-                    await asyncio.sleep(1)
-                    continue
 
                 else:
                     remaining_links = len(links) - count
