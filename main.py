@@ -12,6 +12,7 @@ import urllib
 import urllib.parse
 import yt_dlp
 import tgcrypto
+import base64
 import cloudscraper
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
@@ -531,7 +532,9 @@ async def txt_handler(bot: Client, m: Message):
                         async with aiohttp.ClientSession() as session:
                             async with session.get(f"https://pwbytoken.vercel.app/url?master_url={real_url}") as response:
                                 if response.status == 200:
-                                    url = (await response.text()).strip()
+                                    json_data = await response.json()
+                                    last_url = json_data.get("downloadkaro", "").strip()
+                                    url = last_url
                                     print(f"✅ Final Stream URL: {url}")
                                 else:
                                     print(f"❌ Failed to get stream URL, status: {response.status}")
