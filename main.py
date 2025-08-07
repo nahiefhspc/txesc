@@ -488,55 +488,7 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url = response.json()['url']
             
-            elif "rarestudy22" in url or 'media' in url:
-                def fetch_with_retries(local_url, headers=None, max_retries=10):
-                    for attempt in range(max_retries):
-                        try:
-                            response = requests.get(local_url, headers=headers, timeout=5)
-                            response.raise_for_status()
-                            return response
-                        except requests.RequestException as e:
-                            print(f"[Retry {attempt+1}] Error fetching {local_url}: {e}")
-                            if attempt < max_retries - 1:
-                                time.sleep(2)
-                    return None
-
-                transformed_url = url.replace("/media/", "/video-data?encoded=")
-                headers = {
-                    'authority': 'rarestudy22-e3c80f6989c8.herokuapp.com',
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
-                    'cookie': f"cf_clearance=...; session={raw_text4}",  # Replace cf_clearance string with valid one
-                    'referer': 'https://rarestudy22-e3c80f6989c8.herokuapp.com/batches'
-                }
-
-                video_response = fetch_with_retries(transformed_url, headers)
-                if video_response:
-                    try:
-                        video_data = video_response.json()
-                        video_url = video_data.get("data", {}).get("url", "")
-                    except json.JSONDecodeError:
-                        print("❌ Invalid JSON in video metadata.")
-                        video_url = ""
-                else:
-                    video_url = ""
-
-                if video_url:
-                    try:
-                        async with aiohttp.ClientSession() as session:
-                            async with session.get(f"https://pwbytoken.vercel.app/url?master_url={video_url}") as response:
-                                if response.status == 200:
-                                    url = (await response.text()).strip()
-                                    print(f"✅ Final URL: {url}")
-                                else:
-                                    print(f"❌ Failed to get final URL, status: {response.status}")
-                                    url = ""
-                    except Exception as e:
-                        print(f"❌ Error getting final URL: {e}")
-                        url = ""
-                else:
-                    print("❌ Video URL missing, skipping transformation.")
-
+            
             elif url.startswith("https://streamfiles.eu.org/play.php"):
                 max_retries = 10
                 retry_delay = 2
