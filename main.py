@@ -641,28 +641,16 @@ async def txt_handler(bot: Client, m: Message):
                     retry_delay = 3
                     for attempt in range(max_retries):
                         try:
-                            base_path = real_url.split('?')[0].replace('master.mpd', '')
-                            query_params = real_url.split('?')[1] if '?' in real_url else ''
-                            new_url = f"{base_path}hls/720/main.m3u8" + (f"?{query_params}" if query_params else '')
-                            new_url = new_url.replace(
-                                "https://sec-prod-mediacdn.pw.live",
-                                "https://anonymouspwplayerr-f996115ea61a.herokuapp.com/sec-prod-mediacdn.pw.live"
-                            )
-                            api_url = "https://api-accesstoken.vercel.app"
-                            headers = {"Content-Type": "application/json"}
+                            api_url = f"https://pwbytoken.vercel.app/url?master_url={real_url}"
+                            
                             async with aiohttp.ClientSession() as session:
-                                async with session.get(api_url, headers=headers) as response:
+                                async with session.get(api_url) as response:
                                     if response.status == 200:
-                                        response_data = await response.json()
-                                        if 'access_token' in response_data:
-                                            url = f"{new_url}&token={response_data['access_token']}"
-                                            #url = f"{new_url}&token={raw_text20}"
-                                            print(f"Generated new_url with token: {url}")
-                                            break
-                                        else:
-                                            url = f"{new_url}"
-                                            print(f"No access_token in API response, using: {url}")
-                                            break
+                                        final_url = await response.text()
+                                        url = final_url.strip()
+                                        print(f"✅ Generated final URL: {url}")
+                                        break
+  
                                     else:
                                         print(f"API request failed, status: {response.status}")
                                         if attempt < max_retries - 1:
@@ -679,7 +667,7 @@ async def txt_handler(bot: Client, m: Message):
                                 await asyncio.sleep(retry_delay)
                             continue
                     else:
-                        url = f"{new_url}"
+                        url = ""
 
             elif url.startswith("https://rarestudy.site/media"):
                 async def fetch_url(session: ClientSession, url: str, retries: int = 30, delay: float = 2.0) -> str:
