@@ -544,18 +544,16 @@ async def txt_handler(bot: Client, m: Message):
                     video_url = ""
 
                 if video_url:
-                    # Step 4: Replace domain
+        # Step 4: Replace domain
                     try:
                         api_url = f"https://pwbytoken.vercel.app/url?master_url={video_url}"
                         response = requests.get(api_url)
-
                         if response.status_code == 200:
                             url = response.text.strip()  # Final URL
                         else:
-                           print(f"❌ API returned status code: {response.status_code}")
-                           url = ""             
-                                                 
-
+                            print(f"❌ API returned status code: {response.status_code}")
+                            url = ""             
+                           
             elif url.startswith("https://streamfiles.eu.org/play.php"):
                 max_retries = 10
                 retry_delay = 2
