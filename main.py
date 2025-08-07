@@ -457,89 +457,88 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url = response.json()['url']
             
-            
-            elif url.startswith("https://streamfiles.eu.org/play.php"):
-                max_retries = 10
-                retry_delay = 2
-                real_url = None
-                try:
-                    parsed_url = urllib.parse.urlparse(url)
-                    query_params = urllib.parse.parse_qs(parsed_url.query)
-                    video_url = query_params.get('video_url', [''])[0]
-                    video_title = urllib.parse.unquote(query_params.get('title', ['Unknown Title'])[0])
-                    video_poster = query_params.get('poster', [''])[0]
-                    video_id = query_params.get('video_id', [''])[0]
-                    subject_id = query_params.get('subject_id', [''])[0]
-                    batch_id = query_params.get('batch_id', [''])[0]
+            elif url.startswith("https://streamfiles.eu.org/play.php"):
+                max_retries = 10
+                retry_delay = 2
+                real_url = None
+                try:
+                    parsed_url = urllib.parse.urlparse(url)
+                    query_params = urllib.parse.parse_qs(parsed_url.query)
+                    video_url = query_params.get('video_url', [''])[0]
+                    video_title = urllib.parse.unquote(query_params.get('title', ['Unknown Title'])[0])
+                    video_poster = query_params.get('poster', [''])[0]
+                    video_id = query_params.get('video_id', [''])[0]
+                    subject_id = query_params.get('subject_id', [''])[0]
+                    batch_id = query_params.get('batch_id', [''])[0]
 
-                    try:
-                        decoded_url = base64.b64decode(video_url).decode('utf-8')
-                        print(f"Decoded video_url for {video_title}: {decoded_url}")
-                    except Exception as e:
-                        print(f"Failed to decode video_url for {video_title}: {e}")
-                        decoded_url = None
+                    try:
+                        decoded_url = base64.b64decode(video_url).decode('utf-8')
+                        print(f"Decoded video_url for {video_title}: {decoded_url}")
+                    except Exception as e:
+                        print(f"Failed to decode video_url for {video_title}: {e}")
+                        decoded_url = None
 
-                    play_url = (
-                        f"https://streamfiles.eu.org/play.php"
-                        f"?video_url={urllib.parse.quote(video_url)}"
-                        f"&title={urllib.parse.quote(video_title)}"
-                        f"&poster={video_poster}"
-                        f"&video_type=pw"
-                        f"&video_id={video_id}"
-                        f"&subject_id={subject_id}"
-                        f"&batch_id={batch_id}"
-                    )
+                    play_url = (
+                        f"https://streamfiles.eu.org/play.php"
+                        f"?video_url={urllib.parse.quote(video_url)}"
+                        f"&title={urllib.parse.quote(video_title)}"
+                        f"&poster={video_poster}"
+                        f"&video_type=pw"
+                        f"&video_id={video_id}"
+                        f"&subject_id={subject_id}"
+                        f"&batch_id={batch_id}"
+                    )
 
-                    headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
-                    cookies = {
-                        "_clck": "1hjjwnc|2|fw3|0|1967",
-                        "verified_task": "dHJ1ZQ==",
-                        "countdown_end_time": "MTc0ODc0OTI5NTc3Ng==",
-                        "auth_token": f"{raw_text4}"
-                    }
+                    headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"}
+                    cookies = {
+                        "_clck": "1hjjwnc|2|fw3|0|1967",
+                        "verified_task": "dHJ1ZQ==",
+                        "countdown_end_time": "MTc0ODc0OTI5NTc3Ng==",
+                        "auth_token": f"{raw_text4}"
+                    }
 
-                    async with aiohttp.ClientSession() as session:
-                        for attempt in range(max_retries):
-                            try:
-                                async with session.get(play_url, headers=headers, cookies=cookies) as response:
-                                    if response.status == 200:
-                                        soup = BeautifulSoup(await response.text(), 'html.parser')
-                                        input_group = soup.find('div', class_='input-group')
-                                        if input_group:
-                                            extracted = input_group.find('input', {'id': 'video_url'})
-                                            if extracted and extracted['value']:
-                                                real_url = extracted['value']
-                                                print(f"✅ Extracted real_url for {video_title}: {real_url}")
-                                                break
-                                        print(f"⚠️ No video URL found in input for {video_title}")
-                                    else:
-                                        print(f"⚠️ Attempt {attempt + 1} failed: {response.status}")
-                                if attempt < max_retries - 1:
-                                    await asyncio.sleep(retry_delay)
-                            except Exception as e:
-                                print(f"⚠️ Error on attempt {attempt + 1}: {e}")
-                                if attempt < max_retries - 1:
-                                    await asyncio.sleep(retry_delay)
-                        else:
-                            real_url = decoded_url if decoded_url else None
-                            print(f"❌ Failed to extract real_url after {max_retries} retries.")
-                except Exception as e:
-                    print(f"Error processing StreamFiles URL: {e}")
-                    real_url = decoded_url if decoded_url else None
+                    async with aiohttp.ClientSession() as session:
+                        for attempt in range(max_retries):
+                            try:
+                                async with session.get(play_url, headers=headers, cookies=cookies) as response:
+                                    if response.status == 200:
+                                        soup = BeautifulSoup(await response.text(), 'html.parser')
+                                        input_group = soup.find('div', class_='input-group')
+                                        if input_group:
+                                            extracted = input_group.find('input', {'id': 'video_url'})
+                                            if extracted and extracted['value']:
+                                                real_url = extracted['value']
+                                                print(f"✅ Extracted real_url for {video_title}: {real_url}")
+                                                break
+                                        print(f"⚠️ No video URL found in input for {video_title}")
+                                    else:
+                                        print(f"⚠️ Attempt {attempt + 1} failed: {response.status}")
+                                if attempt < max_retries - 1:
+                                    await asyncio.sleep(retry_delay)
+                            except Exception as e:
+                                print(f"⚠️ Error on attempt {attempt + 1}: {e}")
+                                if attempt < max_retries - 1:
+                                    await asyncio.sleep(retry_delay)
+                        else:
+                            real_url = decoded_url if decoded_url else None
+                            print(f"❌ Failed to extract real_url after {max_retries} retries.")
+                except Exception as e:
+                    print(f"Error processing StreamFiles URL: {e}")
+                    real_url = decoded_url if decoded_url else None
 
-                if real_url:
-                    try:
-                        async with aiohttp.ClientSession() as session:
-                            async with session.get(f"https://pwbytoken.vercel.app/url?master_url={real_url}") as response:
-                                if response.status == 200:
-                                    url = (await response.text()).strip()
-                                    print(f"✅ Final Stream URL: {url}")
-                                else:
-                                    print(f"❌ Failed to get stream URL, status: {response.status}")
-                                    url = real_url
-                    except Exception as e:
-                        print(f"❌ Error getting final stream URL: {e}")
-                        url = real_url
+                if real_url:
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(f"https://pwbytoken.vercel.app/url?master_url={real_url}") as response:
+                                if response.status == 200:
+                                    url = (await response.text()).strip()
+                                    print(f"✅ Final Stream URL: {url}")
+                                else:
+                                    print(f"❌ Failed to get stream URL, status: {response.status}")
+                                    url = real_url
+                    except Exception as e:
+                        print(f"❌ Error getting final stream URL: {e}")
+                        url = real_url
 
             elif "encrypted.m" in url:
                 appxkey = url.split('*')[1]
