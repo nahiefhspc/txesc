@@ -554,9 +554,7 @@ async def txt_handler(bot: Client, m: Message):
                         else:
                            print(f"❌ API returned status code: {response.status_code}")
                            url = ""             
-                   except Exception as e:
-                       print(f"❌ Error while fetching final URL: {e}")
-                       url = ""                              
+                                                 
 
             elif url.startswith("https://streamfiles.eu.org/play.php"):
                 max_retries = 10
