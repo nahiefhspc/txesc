@@ -609,7 +609,28 @@ async def txt_handler(bot: Client, m: Message):
 
                     headers = {
                         "Content-Type": "application/x-www-form-urlencoded",
-                        "Accept": "application/json"
+                        'authority': 'streamfiles.eu.org',
+                        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+                        'cache-control': 'no-cache',
+                        "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE",
+                        'pragma': 'no-cache',
+                        'referer': 'https://streamfiles.eu.org',
+                        'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
+                        'sec-ch-ua-arch': '""',
+                        'sec-ch-ua-bitness': '""',
+                        'sec-ch-ua-full-version': '"137.0.7337.0"',
+                        'sec-ch-ua-full-version-list': '"Chromium";v="137.0.7337.0", "Not/A)Brand";v="24.0.0.0"',
+                        'sec-ch-ua-mobile': '?1',
+                        'sec-ch-ua-model': '"211033MI"',
+                        'sec-ch-ua-platform': '"Android"',
+                        'sec-ch-ua-platform-version': '"11.0.0"',
+                        'sec-fetch-dest': 'document',
+                        'sec-fetch-mode': 'navigate',
+                        'sec-fetch-site': 'same-origin',
+                        'sec-fetch-user': '?1',
+                        'upgrade-insecure-requests': '1',
+                        'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'  
                     }
                     cookies = {
                         "_clck": "1hjjwnc|2|fw3|0|1967",
