@@ -547,7 +547,7 @@ async def txt_handler(bot: Client, m: Message):
                     # Step 4: Replace domain
                     transformed_video_url = video_url.replace(
                         "https://sec-prod-mediacdn.pw.live",
-                        "https://anonymouspwplayerr-f996115ea61a.herokuapp.com/sec-prod-mediacdn.pw.live"
+                        "https://anonymouspwplayer-0e5a3f512dec.herokuapp.com/sec-prod-mediacdn.pw.live"
                     )
 
                     # Step 5: Get token with retry
