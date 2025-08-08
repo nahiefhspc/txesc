@@ -545,34 +545,17 @@ async def txt_handler(bot: Client, m: Message):
                     video_url = ""
 
                 if video_url:
-                    # Step 4: Replace domain
-                    transformed_video_url = video_url.replace(
-                        "https://sec-prod-mediacdn.pw.live",
-                        "https://anonymouspwplayer-0e5a3f512dec.herokuapp.com/sec-prod-mediacdn.pw.live"
-                    )
-
-                    # Step 5: Get token with retry
-                    token_response = fetch_with_retries("https://api-accesstoken.vercel.app", headers={"Content-Type": "application/json"})
-                    if token_response:
-                        try:
-                            token_data = token_response.json()
-                            access_token = token_data.get("access_token", "")
-                        except json.JSONDecodeError:
-                            print("❌ Invalid JSON in token API response.")
-                            access_token = ""
-                    else:
-                        access_token = ""
-
-                    # Step 6: Build final HLS URL
-                    if access_token:
-                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{raw_text2}/main.m3u8")
-                        url = f"{hls_url}&token={access_token}"
-                        #url = f"{hls_url}&token={raw_text20}"
-                    else:
-                        print("❌ Access token missing, skipping transformation.")
-                else:
-                    print("❌ Video URL missing, skipping transformation.")
-          
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(f"https://pwbytoken.vercel.app/url?master_url={real_url}") as response:
+                                if response.status == 200:
+                                    json_data = await response.json()
+                                    last_url = json_data.get("downloadkaro", "").strip()
+                                    url = last_url
+                                    print(f"✅ Final Stream URL: {url}")
+                                else:
+                                    print(f"❌ Failed to get stream URL, status: {response.status}")
+                                    url = real_url          
             
 
             elif url.startswith("https://streamfiles.eu.org/play.php"):
