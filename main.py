@@ -669,29 +669,33 @@ async def txt_handler(bot: Client, m: Message):
                                     "https://anonymouspwplayerr-f996115ea61a.herokuapp.com/sec-prod-mediacdn.pw.live"
                                 )
                 
-                                # Check if the URL is accessible
+                                print(f"Attempting quality {quality}, base URL: {new_url}")
+                
+                # Fetch access token
+                                api_url = "https://api-accesstoken.vercel.app"
+                                headers = {"Content-Type": "application/json"}
                                 async with aiohttp.ClientSession() as session:
-                                    async with session.head(new_url, allow_redirects=True) as check_response:
+                                    async with session.get(api_url, headers=headers) as api_response:
+                                        if api_response.status == 200:
+                                            response_data = await api_response.json()
+                                            if 'access_token' in response_data:
+                                                final_url = f"{new_url}&token={response_data['access_token']}"
+                                            else:
+                                                final_url = f"{new_url}"
+                                                print(f"No access_token in API response, using URL without token for quality {quality}: {final_url}")
+                                        else:
+                                            print(f"API request failed for quality {quality}, status: {api_response.status}")
+                                            if attempt < max_retries - 1:
+                                                await asyncio.sleep(retry_delay)
+                                            continue
+                
+                # Check if the final URL (with or without token) is accessible
+                                async with aiohttp.ClientSession() as session:
+                                    async with session.head(final_url, allow_redirects=True, timeout=10) as check_response:
                                         if check_response.status == 200:
-                                            # If URL is valid, proceed to get token
-                                            api_url = "https://api-accesstoken.vercel.app"
-                                            headers = {"Content-Type": "application/json"}
-                                            async with session.get(api_url, headers=headers) as api_response:
-                                                if api_response.status == 200:
-                                                    response_data = await api_response.json()
-                                                    if 'access_token' in response_data:
-                                                        url = f"{new_url}&token={response_data['access_token']}"
-                                                        print(f"Generated new_url with token for quality {quality}: {url}")
-                                                        break
-                                                    else:
-                                                        url = f"{new_url}"
-                                                        print(f"No access_token in API response, using quality {quality}: {url}")
-                                                        break
-                                                else:
-                                                    print(f"API request failed for quality {quality}, status: {api_response.status}")
-                                                    if attempt < max_retries - 1:
-                                                        await asyncio.sleep(retry_delay)
-                                                    continue
+                                            url = f"{final_url}"
+                                            print(f"Success: Valid URL for quality {quality}: {url}")
+                                            break
                                         else:
                                             print(f"Quality {quality} not available, status: {check_response.status}")
                                             break  # Move to next quality
@@ -709,10 +713,10 @@ async def txt_handler(bot: Client, m: Message):
                         if url:  # If we got a valid URL, exit the quality loop
                             break
     
-                    if not url:  # Fallback if no quality worked
-                        url = f"{new_url}"
-                        print(f"No valid quality found, using fallback: {url}")
-
+                    if not url:
+                        print(f"ERROR: All qualities failed. Last attempted URL: {final_url} (HTTP 404 or other error)")
+                        url = f"{final_url}"  # Fallback to last attempted URL
+                        
             elif url.startswith("https://rarestudy.site/media"):
                 async def fetch_url(session: ClientSession, url: str, retries: int = 30, delay: float = 2.0) -> str:
                     for attempt in range(1, retries + 1):
