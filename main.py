@@ -556,8 +556,8 @@ async def txt_handler(bot: Client, m: Message):
                                 else:
                                     print(f"❌ Failed to get stream URL, status: {response.status}")
                                     url = real_url  
-                            else:
-                                print("❌ Video URL missing, skipping transformation.")
+                else:
+                    print("❌ Video URL missing, skipping transformation.")
 
             
 
