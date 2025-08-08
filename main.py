@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import base64
 import m3u8
 import json
 import time
