@@ -490,121 +490,121 @@ async def txt_handler(bot: Client, m: Message):
                 url = response.json()['url']
 
             elif "rarestudy22" in url:
-                # Inline retry function
-                def fetch_with_retries(local_url, headers=None, max_retries=10):
-                    for attempt in range(max_retries):
-                        try:
-                            response = requests.get(local_url, headers=headers, timeout=5)
-                            response.raise_for_status()
-                            return response
-                        except requests.RequestException as e:
-                            print(f"[Retry {attempt+1}] Error fetching {local_url}: {e}")
-                            if attempt < max_retries - 1:
-                                time.sleep(2)
-                    return None
+                # Inline retry function
+                def fetch_with_retries(local_url, headers=None, max_retries=10):
+                    for attempt in range(max_retries):
+                        try:
+                            response = requests.get(local_url, headers=headers, timeout=5)
+                            response.raise_for_status()
+                            return response
+                        except requests.RequestException as e:
+                            print(f"[Retry {attempt+1}] Error fetching {local_url}: {e}")
+                            if attempt < max_retries - 1:
+                                time.sleep(2)
+                    return None
 
-                # Step 1: Transform URL
-                transformed_url = url.replace("/media/", "/video-data?encoded=")
+                # Step 1: Transform URL
+                transformed_url = url.replace("/media/", "/video-data?encoded=")
 
-                # Step 2: Headers
-                headers = {
-                    'authority': 'rarestudy22-e3c80f6989c8.herokuapp.com',
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
-                    'cache-control': 'no-cache',
-                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={raw_text4}",
-                    'pragma': 'no-cache',
-                    'referer': 'https://rarestudy22-e3c80f6989c8.herokuapp.com/batches',
-                    'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
-                    'sec-ch-ua-arch': '""',
-                    'sec-ch-ua-bitness': '""',
-                    'sec-ch-ua-full-version': '"137.0.7337.0"',
-                    'sec-ch-ua-full-version-list': '"Chromium";v="137.0.7337.0", "Not/A)Brand";v="24.0.0.0"',
-                    'sec-ch-ua-mobile': '?1',
-                    'sec-ch-ua-model': '"211033MI"',
-                    'sec-ch-ua-platform': '"Android"',
-                    'sec-ch-ua-platform-version': '"11.0.0"',
-                    'sec-fetch-dest': 'document',
-                    'sec-fetch-mode': 'navigate',
-                    'sec-fetch-site': 'same-origin',
-                    'sec-fetch-user': '?1',
-                    'upgrade-insecure-requests': '1',
-                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
-                }
+                # Step 2: Headers
+                headers = {
+                    'authority': 'rarestudy22-e3c80f6989c8.herokuapp.com',
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'cache-control': 'no-cache',
+                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={raw_text4}",
+                    'pragma': 'no-cache',
+                    'referer': 'https://rarestudy22-e3c80f6989c8.herokuapp.com/batches',
+                    'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
+                    'sec-ch-ua-arch': '""',
+                    'sec-ch-ua-bitness': '""',
+                    'sec-ch-ua-full-version': '"137.0.7337.0"',
+                    'sec-ch-ua-full-version-list': '"Chromium";v="137.0.7337.0", "Not/A)Brand";v="24.0.0.0"',
+                    'sec-ch-ua-mobile': '?1',
+                    'sec-ch-ua-model': '"211033MI"',
+                    'sec-ch-ua-platform': '"Android"',
+                    'sec-ch-ua-platform-version': '"11.0.0"',
+                    'sec-fetch-dest': 'document',
+                    'sec-fetch-mode': 'navigate',
+                    'sec-fetch-site': 'same-origin',
+                    'sec-fetch-user': '?1',
+                    'upgrade-insecure-requests': '1',
+                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
+                }
 
-                # Step 3: Fetch video metadata with retries
-                video_response = fetch_with_retries(transformed_url, headers)
-                if video_response:
-                    try:
-                        video_data = video_response.json()
-                        video_url = video_data.get("data", {}).get("url", "")
-                    except json.JSONDecodeError:
-                        print("❌ Invalid JSON in video metadata.")
-                        video_url = ""
-                else:
-                    video_url = ""
+                # Step 3: Fetch video metadata with retries
+                video_response = fetch_with_retries(transformed_url, headers)
+                if video_response:
+                    try:
+                        video_data = video_response.json()
+                        video_url = video_data.get("data", {}).get("url", "")
+                    except json.JSONDecodeError:
+                        print("❌ Invalid JSON in video metadata.")
+                        video_url = ""
+                else:
+                    video_url = ""
 
-                if video_url:
-                    # Step 4: Replace domain
-                    transformed_video_url = video_url.replace(
-                        "https://sec-prod-mediacdn.pw.live",
-                        "https://anonymouspwplayerr-f996115ea61a.herokuapp.com/sec-prod-mediacdn.pw.live"
-                    )
+                if video_url:
+                    # Step 4: Replace domain
+                    transformed_video_url = video_url.replace(
+                        "https://sec-prod-mediacdn.pw.live",
+                        "https://anonymouspwplayer-0e5a3f512dec.herokuapp.com/sec-prod-mediacdn.pw.live"
+                    )
 
-                    # Step 5: Get token with retry
-                    token_response = fetch_with_retries("https://api-accesstoken.vercel.app", headers={"Content-Type": "application/json"})
-                    if token_response:
-                        try:
-                            token_data = token_response.json()
-                            access_token = token_data.get("access_token", "")
-                        except json.JSONDecodeError:
-                            print("❌ Invalid JSON in token API response.")
-                            access_token = ""
-                    else:
-                        access_token = ""
+                    # Step 5: Get token with retry
+                    token_response = fetch_with_retries("https://api-accesstoken.vercel.app", headers={"Content-Type": "application/json"})
+                    if token_response:
+                        try:
+                            token_data = token_response.json()
+                            access_token = token_data.get("access_token", "")
+                        except json.JSONDecodeError:
+                            print("❌ Invalid JSON in token API response.")
+                            access_token = ""
+                    else:
+                        access_token = ""
 
-                    # Step 6: Try different qualities
-                    qualities = [720, 480, 360, 240]
-                    url = None
-                    for quality in qualities:
-                        for attempt in range(max_retries):
-                            try:
-                                # Build HLS URL for current quality
-                                hls_url = transformed_video_url.replace("master.mpd", f"hls/{quality}/main.m3u8")
+                    # Step 6: Try different qualities
+                    qualities = [720, 480, 360, 240]
+                    url = None
+                    for quality in qualities:
+                        for attempt in range(max_retries):
+                            try:
+                                # Build HLS URL for current quality
+                                hls_url = transformed_video_url.replace("master.mpd", f"hls/{quality}/main.m3u8")
                     
-                                # Check if the URL is accessible
-                                check_response = fetch_with_retries(hls_url, headers={"Content-Type": "application/json"})
-                                if check_response and check_response.status_code == 200:
-                                    if access_token:
-                                        url = f"{hls_url}&token={access_token}"
-                                        print(f"Generated URL for quality {quality} with token: {url}")
-                                    else:
-                                        url = f"{hls_url}"
-                                        print(f"No access token, using quality {quality}: {url}")
-                                    break
-                                else:
-                                    print(f"Quality {quality} not available, status: {check_response.status_code if check_response else 'no response'}")
-                                    break  # Move to next quality
-                            except requests.RequestException as e:
-                                print(f"Attempt {attempt + 1} failed for quality {quality}: {e}")
-                                if attempt < max_retries - 1:
-                                    time.sleep(2)
-                                continue
-                            except Exception as e:
-                                print(f"Unexpected error on attempt {attempt + 1} for quality {quality}: {e}")
-                                if attempt < max_retries - 1:
-                                    time.sleep(2)
-                                continue
+                                # Check if the URL is accessible
+                                check_response = fetch_with_retries(hls_url, headers={"Content-Type": "application/json"})
+                                if check_response and check_response.status_code == 200:
+                                    if access_token:
+                                        url = f"{hls_url}&token={access_token}"
+                                        print(f"Generated URL for quality {quality} with token: {url}")
+                                    else:
+                                        url = f"{hls_url}"
+                                        print(f"No access token, using quality {quality}: {url}")
+                                    break
+                                else:
+                                    print(f"Quality {quality} not available, status: {check_response.status_code if check_response else 'no response'}")
+                                    break  # Move to next quality
+                            except requests.RequestException as e:
+                                print(f"Attempt {attempt + 1} failed for quality {quality}: {e}")
+                                if attempt < max_retries - 1:
+                                    time.sleep(2)
+                                continue
+                            except Exception as e:
+                                print(f"Unexpected error on attempt {attempt + 1} for quality {quality}: {e}")
+                                if attempt < max_retries - 1:
+                                    time.sleep(2)
+                                continue
             
-                        if url:  # If we got a valid URL, exit the quality loop
-                            break
+                        if url:  # If we got a valid URL, exit the quality loop
+                            break
         
-                    if not url:  # Fallback if no quality worked
-                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{qualities[-1]}/main.m3u8")
-                        url = f"{hls_url}&token={access_token}" if access_token else f"{hls_url}"
-                        print(f"No valid quality found, using fallback quality {qualities[-1]}: {url}")
-                else:
-                    print("❌ Video URL missing, skipping transformation.")                        
+                    if not url:  # Fallback if no quality worked
+                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{qualities[-1]}/main.m3u8")
+                        url = f"{hls_url}&token={access_token}" if access_token else f"{hls_url}"
+                        print(f"No valid quality found, using fallback quality {qualities[-1]}: {url}")
+                else:
+                    print("❌ Video URL missing, skipping transformation.")                        
 
             elif url.startswith("https://streamfiles.eu.org/play.php"):
                 max_retries = 10
@@ -724,7 +724,7 @@ async def txt_handler(bot: Client, m: Message):
                 
                                 print(f"Attempting quality {quality}, base URL: {new_url}")
                 
-                # Fetch access token
+                                # Fetch access token
                                 api_url = "https://api-accesstoken.vercel.app"
                                 headers = {"Content-Type": "application/json"}
                                 async with aiohttp.ClientSession() as session:
@@ -742,7 +742,7 @@ async def txt_handler(bot: Client, m: Message):
                                                 await asyncio.sleep(retry_delay)
                                             continue
                 
-                # Check if the final URL (with or without token) is accessible
+                                # Check if the final URL (with or without token) is accessible
                                 async with aiohttp.ClientSession() as session:
                                     async with session.head(final_url, allow_redirects=True, timeout=10) as check_response:
                                         if check_response.status == 200:
@@ -990,7 +990,7 @@ async def txt_handler(bot: Client, m: Message):
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Dʀᴍ Sᴛᴀʀᴛᴇᴅ...⏳**\n┃\n" \
                            f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
-                           f"╰━📚𝐁𝐚𝐭𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
+                           f"╰━📚𝐁𝐚𝐭𝐚𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
