@@ -555,7 +555,10 @@ async def txt_handler(bot: Client, m: Message):
                                     print(f"✅ Final Stream URL: {url}")
                                 else:
                                     print(f"❌ Failed to get stream URL, status: {response.status}")
-                                    url = real_url          
+                                    url = real_url  
+                            else:
+                                print("❌ Video URL missing, skipping transformation.")
+
             
 
             elif url.startswith("https://streamfiles.eu.org/play.php"):
