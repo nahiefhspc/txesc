@@ -535,6 +535,13 @@ async def txt_handler(bot: Client, m: Message):
                                     json_data = await response.json()
                                     last_url = json_data.get("downloadkaro", "").strip()
                                     url = last_url
+                                    print(f"✅ Final Stream URL: {url}")
+                                else:
+                                    print(f"❌ Failed to get stream URL, status: {response.status}")
+                                    url = last_url
+                    except Exception as e:
+                        print(f"❌ Error getting final stream URL: {e}")
+                        url = last_url
                                     
 
             elif "encrypted.m" in url:
