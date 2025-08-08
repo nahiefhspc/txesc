@@ -529,19 +529,23 @@ async def txt_handler(bot: Client, m: Message):
 
                 if real_url:
                     try:
+                        api_url = f"https://pwbytoken.vercel.app/url?master_url={urllib.parse.quote(real_url)}"
+                        print(f"🌐 Fetching from pwbytoken API: {api_url}")
                         async with aiohttp.ClientSession() as session:
-                            async with session.get(f"https://pwbytoken.vercel.app/url?master_url={real_url}") as response:
-                                if response.status == 200:
-                                    json_data = await response.json()
-                                    last_url = json_data.get("downloadkaro", "").strip()
-                                    url = last_url
-                                    print(f"✅ Final Stream URL: {url}")
+                            async with session.get(api_url) as resp:
+                                if resp.status == 200:
+                                    json_data = await resp.json()
+                                    print("🔍 API raw response:", json_data)
+                                    last_url = json_data.get("downloadkaro")
+                                    if last_url:
+                                        url = last_url
+                                        print(f"✅ Final playable URL: {url}")
+                                    else:
+                                        print("⚠️ 'downloadkaro' key missing in API response.")
                                 else:
-                                    print(f"❌ Failed to get stream URL, status: {response.status}")
-                                    url = real_url
+                                    print(f"❌ API request failed with status {resp.status}")
                     except Exception as e:
-                        print(f"❌ Error getting final stream URL: {e}")
-                        url = real_url
+                        print(f"❌ Error calling pwbytoken API: {e}")
                                     
 
             elif "encrypted.m" in url:
