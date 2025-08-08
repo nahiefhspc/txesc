@@ -564,7 +564,7 @@ async def txt_handler(bot: Client, m: Message):
                         access_token = ""
 
                     # Step 6: Try different qualities
-                    max_retries = 10  # Define max_retries
+                    max_retries = 10
                     retry_delay = 3
                     qualities = [720, 480, 360, 240]
                     url = None
@@ -573,16 +573,14 @@ async def txt_handler(bot: Client, m: Message):
                             try:
                                 # Build HLS URL for current quality
                                 hls_url = transformed_video_url.replace("master.mpd", f"hls/{quality}/main.m3u8")
-                    
-                                # Check if the URL is accessible
-                                check_response = fetch_with_retries(hls_url, headers={"Content-Type": "application/json"})
+                                # Construct final URL with token if available
+                                final_url = f"{hls_url}&token={access_token}" if access_token else hls_url
+
+                                # Check if the final URL is accessible
+                                check_response = fetch_with_retries(final_url, headers={"Content-Type": "application/json"})
                                 if check_response and check_response.status_code == 200:
-                                    if access_token:
-                                        url = f"{hls_url}&token={access_token}"
-                                        print(f"Generated URL for quality {quality} with token: {url}")
-                                    else:
-                                        url = f"{hls_url}"
-                                        print(f"No access token, using quality {quality}: {url}")
+                                    url = final_url
+                                    print(f"Success: Valid URL for quality {quality}: {url}")
                                     break
                                 else:
                                     print(f"Quality {quality} not available, status: {check_response.status_code if check_response else 'no response'}")
@@ -590,12 +588,12 @@ async def txt_handler(bot: Client, m: Message):
                             except requests.RequestException as e:
                                 print(f"Attempt {attempt + 1} failed for quality {quality}: {e}")
                                 if attempt < max_retries - 1:
-                                    time.sleep(2)
+                                    time.sleep(retry_delay)
                                 continue
                             except Exception as e:
                                 print(f"Unexpected error on attempt {attempt + 1} for quality {quality}: {e}")
                                 if attempt < max_retries - 1:
-                                    time.sleep(2)
+                                    time.sleep(retry_delay)
                                 continue
             
                         if url:  # If we got a valid URL, exit the quality loop
@@ -606,7 +604,7 @@ async def txt_handler(bot: Client, m: Message):
                         url = f"{hls_url}&token={access_token}" if access_token else f"{hls_url}"
                         print(f"No valid quality found, using fallback quality {qualities[-1]}: {url}")
                 else:
-                    print("❌ Video URL missing, skipping transformation.")                        
+                    print("❌ Video URL missing, skipping transformation.")
 
             elif url.startswith("https://streamfiles.eu.org/play.php"):
                 max_retries = 10
