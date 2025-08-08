@@ -578,8 +578,8 @@ async def txt_handler(bot: Client, m: Message):
                         access_token = ""
 
                     # Step 6: Try different qualities
-                    max_retries = 10
-                    retry_delay = 3
+                    max_retries = 3
+                    retry_delay = 2
                     qualities = [720, 480, 360, 240]
                     url = None
                     for quality in qualities:
