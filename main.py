@@ -56,7 +56,6 @@ photologo = 'https://tinypic.host/images/2025/02/07/DeWatermark.ai_1738952933236
 photoyt = 'https://tinypic.host/images/2025/03/18/YouTube-Logo.wine.png'
 photocp = 'https://tinypic.host/images/2025/03/28/IMG_20250328_133126.jpg'
 photozip = 'https://envs.sh/cD_.jpg'
-session_token = "raw_text98"
 
 async def show_random_emojis(message):
     emojis = ['🐼', '🐶', '🐅', '⚡️', '🚀', '✨', '💥', '☠️', '🥂', '🍾', '📬', '👻', '👀', '🌹', '💀', '🐇', '⏳', '🔮', '🦔', '📖', '🦁', '🐱', '🐻‍❄️', '☁️', '🚹', '🚺', '🐠', '🦋']
@@ -490,7 +489,7 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url = response.json()['url']
 
-            elif "rarestudy" in url:
+            elif "rarestud4yvwyv1y" in url:
                 # Inline retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=10):
                     for attempt in range(max_retries):
@@ -783,6 +782,120 @@ async def txt_handler(bot: Client, m: Message):
                     if not url:
                         print(f"ERROR: All qualities failed. Last attempted URL: {final_url} (HTTP 404 or other error)")
                         url = f"{final_url}"  # Fallback to last attempted URL
+
+
+            elif "rarestudy" in url:
+                # Retry function
+                def fetch_with_retries(local_url, headers=None, max_retries=10):
+                    for attempt in range(max_retries):
+                        try:
+                            response = requests.get(local_url, headers=headers, timeout=5)
+                            response.raise_for_status()
+                            return response
+                        except requests.RequestException as e:
+                            print(f"[Retry {attempt+1}] Error fetching {local_url}: {e}")
+                            if attempt < max_retries - 1:
+                                time.sleep(2)
+                    return None
+
+                # Step 1: Fetch session token
+                token_api_url = "https://rarekatoken2.vercel.app/token"
+                token_response = fetch_with_retries(token_api_url, headers={"Content-Type": "application/json"})
+                if token_response:
+                    try:
+                        token_data = token_response.json()
+                        session_token = token_data.get("use_token", "raw_text98")
+                        print(f"✅ Fetched session token: {session_token}")
+                    except json.JSONDecodeError:
+                        print("❌ Invalid JSON in token API, using default token.")
+                        session_token = "raw_text98"
+                else:
+                    print("❌ Failed to fetch session token, using default.")
+                    session_token = "raw_text98"
+
+                # Step 2: Transform URL
+                transformed_url = url.replace("/media/", "/video-data?encoded=")
+
+    # Step 3: Headers for video metadata request
+                headers = {
+                    'authority': 'rarestudy.site',
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'cache-control': 'no-cache',
+                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={session_token}",
+                    'pragma': 'no-cache',
+                    'referer': 'https://rarestudy.site/batches',
+                    'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
+                    'sec-ch-ua-arch': '""',
+                    'sec-ch-ua-bitness': '""',
+                    'sec-ch-ua-full-version': '"137.0.7337.0"',
+                    'sec-ch-ua-full-version-list': '"Chromium";v="137.0.7337.0", "Not/A)Brand";v="24.0.0.0"',
+                    'sec-ch-ua-mobile': '?1',
+                    'sec-ch-ua-model': '"211033MI"',
+                    'sec-ch-ua-platform': '"Android"',
+                    'sec-ch-ua-platform-version': '"11.0.0"',
+                    'sec-fetch-dest': 'document',
+                    'sec-fetch-mode': 'navigate',
+                    'sec-fetch-site': 'same-origin',
+                    'sec-fetch-user': '?1',
+                    'upgrade-insecure-requests': '1',
+                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
+                }
+
+                # Step 4: Fetch video metadata
+                video_response = fetch_with_retries(transformed_url, headers)
+                if video_response:
+                    try:
+                        video_data = video_response.json()
+                        video_url = video_data.get("data", {}).get("url", "")
+                    except json.JSONDecodeError:
+                        print("❌ Invalid JSON in video metadata.")
+                        video_url = ""
+                else:
+                    video_url = ""
+
+                if video_url:
+                    # Step 5: Replace domain for proxy
+                    transformed_video_url = video_url.replace(
+                        "https://sec-prod-mediacdn.pw.live",
+                        "https://anonymouspwplayer-0e5a3f512dec.herokuapp.com/sec-prod-mediacdn.pw.live"
+                    )
+
+                    # Step 6: Fetch access token
+                    token_response = fetch_with_retries("https://api-accesstoken.vercel.app", headers={"Content-Type": "application/json"})
+                    if token_response:
+                        try:
+                            token_data = token_response.json()
+                            access_token = token_data.get("access_token", "")
+                        except json.JSONDecodeError:
+                            print("❌ Invalid JSON in token API response.")
+                            access_token = ""
+                    else:
+                        access_token = ""
+
+                    # Step 7: Try different qualities
+                    qualities = [720, 480, 360, 240]
+                    url_found = None
+
+                    for quality in qualities:
+                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{quality}/main.m3u8")
+                        final_url = f"{hls_url}&token={access_token}" if access_token else hls_url
+                        check_response = fetch_with_retries(final_url)
+                        if check_response and check_response.status_code == 200:
+                            url_found = final_url
+                            print(f"✅ Found working URL ({quality}p): {final_url}")
+                            break
+                        else:
+                            print(f"⚠️ Quality {quality} not available.")
+
+                    if not url_found:
+                        fallback_quality = qualities[-1]
+                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{fallback_quality}/main.m3u8")
+                        url_found = f"{hls_url}&token={access_token}" if access_token else hls_url
+                        print(f"⚠️ Using fallback ({fallback_quality}p): {url_found}")
+                else:
+                    print("❌ No video URL found, skipping.")
+                       
                         
             elif url.startswith("https://raregb6gnygby.site/media"):
                 async def fetch_url(session: ClientSession, url: str, retries: int = 30, delay: float = 2.0) -> str:
