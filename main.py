@@ -56,6 +56,7 @@ photologo = 'https://tinypic.host/images/2025/02/07/DeWatermark.ai_1738952933236
 photoyt = 'https://tinypic.host/images/2025/03/18/YouTube-Logo.wine.png'
 photocp = 'https://tinypic.host/images/2025/03/28/IMG_20250328_133126.jpg'
 photozip = 'https://envs.sh/cD_.jpg'
+session_token = "raw_text98"
 
 async def show_random_emojis(message):
     emojis = ['🐼', '🐶', '🐅', '⚡️', '🚀', '✨', '💥', '☠️', '🥂', '🍾', '📬', '👻', '👀', '🌹', '💀', '🐇', '⏳', '🔮', '🦔', '📖', '🦁', '🐱', '🐻‍❄️', '☁️', '🚹', '🚺', '🐠', '🦋']
@@ -505,7 +506,6 @@ async def txt_handler(bot: Client, m: Message):
 
                     token_api_url = "https://rarekatoken2.vercel.app/token"
                     token_response = fetch_with_retries(token_api_url, headers={"Content-Type": "application/json"})
-                    session_token = "raw_text98"  # Default fallback
                     if token_response:
                         try:
                             token_data = token_response.json()
