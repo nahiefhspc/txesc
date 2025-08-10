@@ -990,7 +990,7 @@ async def txt_handler(bot: Client, m: Message):
             elif "youtube.com" in url or "youtu.be" in url:
                 cmd = f'yt-dlp --cookies {cookies_file_path} -f "{ytf}" "{url}" -o "{name}.mp4"'
             else:
-                cmd = f'yt-dlp --download-sections "*5:" -f "{ytf}" "{url}" -o "{name}.mp4"'
+                cmd = f'yt-dlp --download-sections "*5:end" -f "{ytf}" "{url}" -o "{name}.mp4"'
             try:
                 cc = f'**|🇮🇳| {name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
                 cc1 = f'**|🇮🇳| {name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
