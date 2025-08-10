@@ -990,19 +990,23 @@ async def txt_handler(bot: Client, m: Message):
             elif "youtube.com" in url or "youtu.be" in url:
                 cmd = f'yt-dlp --cookies {cookies_file_path} -f "{ytf}" "{url}" -o "{name}.mp4"'
             else:
-                skip_seconds = 5
-                end_time = None
-                try:
-                    m3u8_data = requests.get(url, timeout=10).text
-                    durations = re.findall(r"#EXTINF:([\d\.]+)", m3u8_data)
-                    end_time = int(sum(float(d) for d in durations))
-                except Exception as e:
-                    print(f"Error fetching m3u8 duration: {e}")
-
-                if end_time:
-                    cmd = f'yt-dlp --download-sections "*{skip_seconds}:{end_time}" -f "{ytf}" "{url}" -o "{name}.mp4"'
-                else:
-                    cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
+                 skip_seconds = 5
+                 end_time = None
+                 try:
+                     m3u8_data = requests.get(url, timeout=10).text
+                     durations = re.findall(r"#EXTINF:([\d\.]+)", m3u8_data)
+                     total_seconds = int(sum(float(d) for d in durations))
+                     # Convert seconds to HH:MM:SS
+                     hours = total_seconds // 3600
+                     minutes = (total_seconds % 3600) // 60
+                     seconds = total_seconds % 60
+                     end_time = f"{hours:02}:{minutes:02}:{seconds:02}"
+                 except Exception as e:
+                     print(f"Error fetching m3u8 duration: {e}")
+                 if end_time:
+                     cmd = f'yt-dlp --download-sections "*{skip_seconds}:{end_time}" -f "{ytf}" "{url}" -o "{name}.mp4"'
+                 else:
+                     cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
             try:
                 cc = f'**|🇮🇳| {name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
                 cc1 = f'**|🇮🇳| {name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
