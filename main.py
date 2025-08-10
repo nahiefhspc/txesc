@@ -996,15 +996,11 @@ async def txt_handler(bot: Client, m: Message):
                      m3u8_data = requests.get(url, timeout=10).text
                      durations = re.findall(r"#EXTINF:([\d\.]+)", m3u8_data)
                      total_seconds = int(sum(float(d) for d in durations))
-                     # Convert seconds to HH:MM:SS
-                     hours = total_seconds // 3600
-                     minutes = (total_seconds % 3600) // 60
-                     seconds = total_seconds % 60
-                     end_time = f"{hours:02}:{minutes:02}:{seconds:02}"
+                     end_time = total_seconds
                  except Exception as e:
                      print(f"Error fetching m3u8 duration: {e}")
                  if end_time:
-                     cmd = f'yt-dlp --download-sections "*{skip_seconds}:{end_time}" -f "{ytf}" "{url}" -o "{name}.mp4"'
+                     cmd = f'yt-dlp --download-sections "*{skip_seconds}s:{end_time}s" -f "{ytf}" "{url}" -o "{name}.mp4"'
                  else:
                      cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
             try:
