@@ -1000,7 +1000,7 @@ async def txt_handler(bot: Client, m: Message):
                 except Exception as e:
                     print(f"Error fetching m3u8 duration: {e}")
                 if end_time:
-                    cmd = f'yt-dlp --concurrent-fragments 30 --download-sections "*{skip_seconds}-{end_time}" -f "{ytf}" "{url}" -o "{name}.mp4"'
+                    cmd = f'yt-dlp --concurrent-fragments 1000 --download-sections "*{skip_seconds}-{end_time}" -f "{ytf}" "{url}" -o "{name}.mp4"'
                 else:
                     cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'                                                                                     
             try:
