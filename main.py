@@ -1007,7 +1007,10 @@ async def txt_handler(bot: Client, m: Message):
                     os.remove(temp_file)
                 except FileNotFoundError:
                     pass
-                cmd = None                                                                              
+                cmd = None
+
+            if cmd:
+                subprocess.run(cmd, shell=True)
             try:
                 cc = f'**|🇮🇳| {name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
                 cc1 = f'**|🇮🇳| {name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
