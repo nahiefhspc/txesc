@@ -990,19 +990,24 @@ async def txt_handler(bot: Client, m: Message):
             elif "youtube.com" in url or "youtu.be" in url:
                 cmd = f'yt-dlp --cookies {cookies_file_path} -f "{ytf}" "{url}" -o "{name}.mp4"'
             else:
-                skip_seconds = 5
-                end_time = None
+                temp_file = f"{name}_temp.mp4"
+                final_file = f"{name}.mp4"
+                # Step 1: Download full video with maximum parallel fragments
+                subprocess.run(
+                    f'yt-dlp --concurrent-fragments 50 -f "{ytf}" "{url}" -o "{temp_file}"',
+                    shell=True
+                )
+                # Step 2: Skip first 5 seconds locally (instant cut)
+                subprocess.run(
+                    f'ffmpeg -y -ss 5 -i "{temp_file}" -c copy "{final_file}"',
+                    shell=True
+                )
+                # Step 3: Remove temporary file
                 try:
-                    m3u8_data = requests.get(url, timeout=10).text
-                    durations = re.findall(r"#EXTINF:([\d\.]+)", m3u8_data)
-                    total_seconds = int(sum(float(d) for d in durations))
-                    end_time = total_seconds
-                except Exception as e:
-                    print(f"Error fetching m3u8 duration: {e}")
-                if end_time:
-                    cmd = f'yt-dlp --concurrent-fragments 1000 --download-sections "*{skip_seconds}-{end_time}" -f "{ytf}" "{url}" -o "{name}.mp4"'
-                else:
-                    cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'                                                                                     
+                    os.remove(temp_file)
+                except FileNotFoundError:
+                    pass
+                cmd = None                                                                              
             try:
                 cc = f'**|🇮🇳| {name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
                 cc1 = f'**|🇮🇳| {name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
