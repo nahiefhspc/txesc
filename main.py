@@ -992,25 +992,11 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 temp_file = f"{name}_temp.mp4"
                 final_file = f"{name}.mp4"
-                # Step 1: Download full video with maximum parallel fragments
-                subprocess.run(
-                    f'yt-dlp --concurrent-fragments 50 -f "{ytf}" "{url}" -o "{temp_file}"',
-                    shell=True
+                cmd = (
+                    f'yt-dlp --concurrent-fragments 50 -f "{ytf}" "{url}" -o "{temp_file}" '
+                    f'&& ffmpeg -y -ss 5 -i "{temp_file}" -c copy "{final_file}" '
+                    f'&& rm -f "{temp_file}"'
                 )
-                # Step 2: Skip first 5 seconds locally (instant cut)
-                subprocess.run(
-                    f'ffmpeg -y -ss 5 -i "{temp_file}" -c copy "{final_file}"',
-                    shell=True
-                )
-                # Step 3: Remove temporary file
-                try:
-                    os.remove(temp_file)
-                except FileNotFoundError:
-                    pass
-                cmd = None
-
-            if cmd:
-                subprocess.run(cmd, shell=True)
             try:
                 cc = f'**|🇮🇳| {name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
                 cc1 = f'**|🇮🇳| {name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
