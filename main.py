@@ -992,27 +992,129 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 skip_seconds = 5
                 try:
-                    m3u8_data = requests.get(url, timeout=10).text
+                    # fetch playlist
+                    resp = requests.get(url, timeout=10)
+                    m3u8_data = resp.text
+
+                    # quick check
+                    if '#EXTM3U' not in m3u8_data:
+                        raise Exception("Not an HLS playlist")
+
+                    # If master playlist -> pick variant with highest BANDWIDTH
+                    if '#EXT-X-STREAM-INF' in m3u8_data:
+                        lines = m3u8_data.splitlines()
+                        variants = []
+                        for i, line in enumerate(lines):
+                            if line.startswith('#EXT-X-STREAM-INF'):
+                                bw_match = re.search(r'BANDWIDTH=(\d+)', line)
+                                bw = int(bw_match.group(1)) if bw_match else 0
+                                # next line should be the variant url
+                                if i + 1 < len(lines):
+                                    variant_uri = lines[i+1].strip()
+                                    variants.append((bw, variant_uri))
+                        if not variants:
+                            raise Exception("Master playlist but no variant found")
+                        variants.sort(reverse=True)  # highest bandwidth first
+                        chosen_uri = variants[0][1]
+                        variant_url = urllib.parse.urljoin(url, chosen_uri)
+                        m3u8_data = requests.get(variant_url, timeout=10).text
+                        base_url = variant_url.rsplit('/', 1)[0] + '/'
+                    else:
+                        base_url = url.rsplit('/', 1)[0] + '/'
+
                     lines = m3u8_data.splitlines()
-                    new_lines = []
-                    time_accum = 0.0
-                    skip_done = False
+
+                    # collect segments (pairs of #EXTINF and next-line uri)
+                    segments = []
                     for i, line in enumerate(lines):
-                        if line.startswith("#EXTINF") and not skip_done:
-                            dur = float(line.replace("#EXTINF:", "").split(",")[0])
-                            time_accum += dur
-                            if time_accum < skip_seconds:
-                                continue  # skip this segment
-                            else:
-                                skip_done = True
-                        if skip_done:
-                            new_lines.append(line)
-                    temp_m3u8 = tempfile.NamedTemporaryFile(delete=False, suffix=".m3u8")
-                    temp_m3u8.write("\n".join(new_lines).encode())
-                    temp_m3u8.close()
-                    cmd = f'yt-dlp -f "{ytf}" "{temp_m3u8.name}" -o "{name}.mp4"'
+                        if line.startswith('#EXTINF'):
+                            # duration may be like: #EXTINF:9.009,
+                            dur = float(line.split(':', 1)[1].split(',')[0])
+                            uri = lines[i + 1].strip() if (i + 1) < len(lines) else ''
+                            segments.append({
+                                'extinf_idx': i,
+                                'uri_idx': i + 1,
+                                'dur': dur,
+                                'extinf': line,
+                                'uri': uri
+                            })
+
+                    if not segments:
+                        raise Exception("No media segments found in playlist")
+
+                    # find how many full segments we must drop to reach skip_seconds
+                    acc = 0.0
+                    skip_count = 0
+                    for s in segments:
+                        acc += s['dur']
+                        skip_count += 1
+                        if acc >= skip_seconds:
+                            break
+
+                    if skip_count >= len(segments):
+                        raise Exception("Skip time >= total duration; aborting trim")
+
+                    # find index (in lines) of first kept #EXTINF
+                    first_kept_extinf_idx = segments[skip_count]['extinf_idx']
+
+                    # compute new EXT-X-MEDIA-SEQUENCE
+                    orig_seq = 0
+                    for l in lines[:first_kept_extinf_idx]:
+                        if l.startswith('#EXT-X-MEDIA-SEQUENCE'):
+                            try:
+                                orig_seq = int(l.split(':', 1)[1].strip())
+                            except:
+                                orig_seq = 0
+                            break
+                    new_seq = orig_seq + skip_count
+
+                    # header portion: everything up to first_kept_extinf_idx
+                    header_lines = lines[:first_kept_extinf_idx]
+
+                    # replace or insert MEDIA-SEQUENCE
+                    ms_found = False
+                    for idx, l in enumerate(header_lines):
+                        if l.startswith('#EXT-X-MEDIA-SEQUENCE'):
+                            header_lines[idx] = f'#EXT-X-MEDIA-SEQUENCE:{new_seq}'
+                            ms_found = True
+                            break
+                    if not ms_found:
+                        # insert after #EXTM3U (or at start if missing)
+                        insert_pos = 1 if header_lines and header_lines[0].startswith('#EXTM3U') else 0
+                        header_lines.insert(insert_pos + 1, f'#EXT-X-MEDIA-SEQUENCE:{new_seq}')
+
+                    # Build new playlist: header_lines + the remaining lines starting at first_kept_extinf_idx
+                    new_lines = header_lines + lines[first_kept_extinf_idx:]
+
+                    # Convert relative segment URIs and key URIs to absolute (so local temp file works)
+                    for i in range(len(new_lines)):
+                        # handle segment URI lines (they follow #EXTINF)
+                        if new_lines[i].startswith('#EXTINF'):
+                            if i + 1 < len(new_lines):
+                                uri_line = new_lines[i + 1].strip()
+                                if uri_line and not uri_line.startswith('http') and not uri_line.startswith('crypto+'):
+                                    new_lines[i + 1] = urllib.parse.urljoin(base_url, uri_line)
+                        # handle EXT-X-KEY URI="..."
+                        if new_lines[i].startswith('#EXT-X-KEY'):
+                            m = re.search(r'URI="([^"]+)"', new_lines[i])
+                            if m:
+                                key_uri = m.group(1)
+                                if key_uri and not key_uri.startswith('http') and not key_uri.startswith('crypto+'):
+                                    abs_key = urllib.parse.urljoin(base_url, key_uri)
+                                    new_lines[i] = new_lines[i].replace(key_uri, abs_key)
+
+                    # write trimmed playlist to a temp file
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.m3u8', mode='w', encoding='utf-8')
+                    tmp.write('\n'.join(new_lines))
+                    tmp.close()
+                    temp_m3u8_path = tmp.name
+
+                    # Build the yt-dlp command to point at the trimmed playlist
+                    cmd = f'yt-dlp -f "{ytf}" "{temp_m3u8_path}" -o "{name}.mp4"'
+
                 except Exception as e:
-                    print(f"Error trimming m3u8: {e}")
+                    print(f"m3u8 trimming failed: {e}")
+                    # fallback to normal download
                     cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
             try:
                 cc = f'**|🇮🇳| {name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}**'
