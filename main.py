@@ -993,8 +993,8 @@ async def txt_handler(bot: Client, m: Message):
                 temp_file = f"{name}_temp.mp4"
                 final_file = f"{name}.mp4"
                 cmd = (
-                    f'yt-dlp --concurrent-fragments 200 -f "{ytf}" "{url}" -o "{temp_file}" '
-                    f'&& ffmpeg -y -ss 12 -i "{temp_file}" -c copy "{final_file}" '
+                    f'yt-dlp --concurrent-fragments 5000 -f "{ytf}" "{url}" -o "{temp_file}" '
+                    f'&& ffmpeg -y -ss 15 -i "{temp_file}" -c copy "{final_file}" '
                     f'&& rm -f "{temp_file}"'
                 )
             try:
