@@ -489,7 +489,7 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url = response.json()['url']
 
-            elif "rarestud4yvwyv1y" in url:
+            elif "rarestudy" in url:
                 # Inline retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=10):
                     for attempt in range(max_retries):
@@ -784,7 +784,7 @@ async def txt_handler(bot: Client, m: Message):
                         url = f"{final_url}"  # Fallback to last attempted URL
 
 
-            elif "rarestudy" in url:
+            elif "rarestudywggrfvv" in url:
                 # Retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=10):
                     for attempt in range(max_retries):
