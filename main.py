@@ -489,6 +489,163 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url = response.json()['url']
 
+            elif "rarestudy" in url:                
+                # Retry GET
+                def fetch_with_retries(local_url, headers=None, max_retries=8, timeout=6):
+                    for attempt in range(max_retries):
+                        try:
+                            resp = requests.get(local_url, headers=headers, timeout=timeout)
+                            resp.raise_for_status()
+                            return resp
+                        except requests.RequestException as e:
+                            print(f"[Retry {attempt+1}] {e}")
+                            if attempt < max_retries - 1:
+                                time.sleep(2)
+                    return None
+
+                # Transform /media to /video-data
+                def transform_rarestudy_url(input_url):
+                    parsed = urlparse(input_url)
+                    if '/media/' in input_url:
+                        return input_url.replace('/media/', '/video-data?encoded=')
+                    parts = parsed.path.split('/')
+                    if 'media' in parts:
+                        idx = parts.index('media')
+                        encoded = '/'.join(parts[idx+1:])
+                        new_query = urlencode({'encoded': encoded})
+                        return urlunparse((parsed.scheme, parsed.netloc, '/video-data', '', new_query, ''))
+                    return input_url
+
+                # Step 1: Fetch session token
+                token_resp = fetch_with_retries(
+                    "https://rarekatoken2.vercel.app/token",
+                    headers={'Content-Type': 'application/json'}
+                )
+                if token_resp:
+                    try:
+                        session_token = token_resp.json().get("use_token", "raw_text98")
+                    except json.JSONDecodeError:
+                        session_token = "raw_text98"
+                else:
+                    session_token = "raw_text98"
+
+                # Step 2: Fetch original /media link (with headers)
+                media_headers = {
+                    'authority': 'rarestudy.site',
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'cache-control': 'no-cache',
+                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={session_token}",
+                    'pragma': 'no-cache',
+                    'referer': 'https://rarestudy.site/batches',
+                    'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
+                    'sec-ch-ua-arch': '""',
+                    'sec-ch-ua-bitness': '""',
+                    'sec-ch-ua-full-version': '"137.0.7337.0"',
+                    'sec-ch-ua-full-version-list': '"Chromium";v="137.0.7337.0", "Not/A)Brand";v="24.0.0.0"',
+                    'sec-ch-ua-mobile': '?1',
+                    'sec-ch-ua-model': '"211033MI"',
+                    'sec-ch-ua-platform': '"Android"',
+                    'sec-ch-ua-platform-version': '"11.0.0"',
+                    'sec-fetch-dest': 'document',
+                    'sec-fetch-mode': 'navigate',
+                    'sec-fetch-site': 'same-origin',
+                    'sec-fetch-user': '?1',
+                    'upgrade-insecure-requests': '1',
+                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
+                }
+                media_resp = fetch_with_retries(url, headers=media_headers)
+                if not media_resp:
+                    print("❌ Failed to fetch /media link.")
+                    video_url = ""
+                else:
+                    # Step 3: Transform URL
+                    transformed_url = transform_rarestudy_url(url)
+                    print(f"➡ Transformed URL: {transformed_url}")
+
+                    # Step 4: Fetch transformed link (video metadata)
+                    meta_headers = {
+                    'authority': 'rarestudy.site',
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'cache-control': 'no-cache',
+                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={session_token}",
+                    'pragma': 'no-cache',
+                    'referer': 'https://rarestudy.site/batches',
+                    'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
+                    'sec-ch-ua-arch': '""',
+                    'sec-ch-ua-bitness': '""',
+                    'sec-ch-ua-full-version': '"137.0.7337.0"',
+                    'sec-ch-ua-full-version-list': '"Chromium";v="137.0.7337.0", "Not/A)Brand";v="24.0.0.0"',
+                    'sec-ch-ua-mobile': '?1',
+                    'sec-ch-ua-model': '"211033MI"',
+                    'sec-ch-ua-platform': '"Android"',
+                    'sec-ch-ua-platform-version': '"11.0.0"',
+                    'sec-fetch-dest': 'document',
+                    'sec-fetch-mode': 'navigate',
+                    'sec-fetch-site': 'same-origin',
+                    'sec-fetch-user': '?1',
+                    'upgrade-insecure-requests': '1',
+                    'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36'
+                    }
+                    video_resp = fetch_with_retries(transformed_url, headers=meta_headers)
+                    video_url = ""
+                    if video_resp:
+                        try:
+                            data = video_resp.json()
+                            video_url = data.get("data", {}).get("url", "")
+                        except json.JSONDecodeError:
+                            m = re.search(r'"url"\s*:\s*"(?P<u>https?://[^"]+)"', video_resp.text)
+                            if m:
+                                video_url = m.group('u')
+
+                if not video_url:
+                    print("❌ No video URL found.")
+                else:
+                    print(f"➡ Raw video URL: {video_url}")
+
+                    # Step 5: Replace CDN domain
+                    transformed_video_url = video_url.replace(
+                        "https://sec-prod-mediacdn.pw.live",
+                        "https://anonymouspwplayer-0e5a3f512dec.herokuapp.com/sec-prod-mediacdn.pw.live"
+                    )
+
+                    # Step 6: Fetch access token
+                    access_resp = fetch_with_retries(
+                        "https://api-accesstoken.vercel.app",
+                        headers={'Content-Type': 'application/json'}
+                    )
+                    access_token = ""
+                    if access_resp:
+                        try:
+                            access_token = access_resp.json().get("access_token", "")
+                        except json.JSONDecodeError:
+                            pass
+
+                    # Step 7: Try different qualities
+                    qualities = [720, 480, 360, 240]
+                    url_found = ""
+                    for q in qualities:
+                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{q}/main.m3u8")
+                        final_url = f"{hls_url}&token={access_token}" if access_token else hls_url
+                        chk = fetch_with_retries(final_url)
+                        if chk and chk.status_code == 200 and '#EXTM3U' in chk.text[:200]:
+                            url_found = final_url
+                            print(f"✅ Working URL ({q}p): {url_found}")
+                            break
+                        else:
+                            print(f"✖ {q}p not available.")
+
+                    if not url_found:
+                        fallback_q = qualities[-1]
+                        hls_url = transformed_video_url.replace("master.mpd", f"hls/{fallback_q}/main.m3u8")
+                        url_found = f"{hls_url}&token={access_token}" if access_token else hls_url
+                        print(f"⚠ Using fallback {fallback_q}p: {url_found}")
+
+                    # Final URL
+                    url = url_found
+            
+
             elif "rahnedvexrestntudy" in url:
                 # Inline retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=10):
@@ -784,7 +941,7 @@ async def txt_handler(bot: Client, m: Message):
                         url = f"{final_url}"  # Fallback to last attempted URL
 
 
-            elif url.startswith("https://rarestudy.site/media/"):
+            elif url.startswith("https://rarewkxj3kckwmsm"):
                 # Retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=20):
                     for attempt in range(max_retries):
