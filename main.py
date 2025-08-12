@@ -489,7 +489,7 @@ async def txt_handler(bot: Client, m: Message):
                 response = requests.get(f'https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url={url}', headers=headers)
                 url = response.json()['url']
 
-            elif "rarestudy" in url:
+            elif "rahnedvexrestntudy" in url:
                 # Inline retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=10):
                     for attempt in range(max_retries):
@@ -784,12 +784,12 @@ async def txt_handler(bot: Client, m: Message):
                         url = f"{final_url}"  # Fallback to last attempted URL
 
 
-            elif "rarestudywggrfvv" in url:
+            elif "rarestudy.site/media" in url:
                 # Retry function
-                def fetch_with_retries(local_url, headers=None, max_retries=10):
+                def fetch_with_retries(local_url, headers=None, max_retries=20):
                     for attempt in range(max_retries):
                         try:
-                            response = requests.get(local_url, headers=headers, timeout=5)
+                            response = requests.get(local_url, headers=headers, timeout=15)
                             response.raise_for_status()
                             return response
                         except requests.RequestException as e:
@@ -822,7 +822,7 @@ async def txt_handler(bot: Client, m: Message):
                     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7',
                     'cache-control': 'no-cache',
-                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={session_token}",
+                    "cookie": f"cf_clearance=cf_clearance=g3z7irdDD_BHTi3MpE6UR1ay4eiXTVG5RkRAMVhKILY-1751948668-1.2.1.1-N72U8xIccTHnfRiJKnZ.6.7mFmGEyNtSKCGzExb012j7Stkj.tPSBic648hLtwqgM.lAlXy0u_JWeAoqL4C3smrGgLTPwHlhVNuf0kxOC5QYDhjj.elN4ZjSoh8doZN1V6BWcl3_eALAXHwzZUwP4Gp9J.fpDzuFCAIonMfPPtVMt4Ib7SiRLoEVsAmP7s6R1XueOqPqYCa9nVygHZBa3MRUsBcwC8SdOEfwy9TiFZE; session={raw_text4}",
                     'pragma': 'no-cache',
                     'referer': 'https://rarestudy.site/batches',
                     'sec-ch-ua': '"Chromium";v="137", "Not/A)Brand";v="24"',
