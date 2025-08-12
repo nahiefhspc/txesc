@@ -17,6 +17,7 @@ import cloudscraper
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64encode, b64decode
+from urllib.parse import urlparse, parse_qs
 from logs import logging
 from bs4 import BeautifulSoup
 import saini as helper
