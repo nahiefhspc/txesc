@@ -784,7 +784,7 @@ async def txt_handler(bot: Client, m: Message):
                         url = f"{final_url}"  # Fallback to last attempted URL
 
 
-            elif "rarestudy.site/media" in url:
+            elif url.startswith("https://rarestudy.site/media/"):
                 # Retry function
                 def fetch_with_retries(local_url, headers=None, max_retries=20):
                     for attempt in range(max_retries):
