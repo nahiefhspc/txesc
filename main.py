@@ -628,7 +628,7 @@ async def txt_handler(bot: Client, m: Message):
                     url_found = ""
                     for q in qualities:
                         hls_url = transformed_video_url.replace("master.mpd", f"hls/{q}/main.m3u8")
-                        final_url = f"{hls_url}&token={raw_text4}"
+                        final_url = f"{hls_url}&token={access_token}"
                         chk = fetch_with_retries(final_url)
                         if chk and chk.status_code == 200 and '#EXTM3U' in chk.text[:200]:
                             url_found = final_url
