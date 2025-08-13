@@ -640,7 +640,7 @@ async def txt_handler(bot: Client, m: Message):
                             pass
 
                     # Step 7: Try different qualities
-                    qualities = [f"{raw_text4}"]
+                    qualities = [720, 480, 360, 240]
                     url_found = ""
                     for q in qualities:
                         hls_url = transformed_video_url.replace("master.mpd", f"hls/{q}/main.m3u8")
