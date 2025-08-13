@@ -391,7 +391,7 @@ async def txt_handler(bot: Client, m: Message):
     else:
         CR = raw_text3
 
-    await editable.edit("🔹Enter Your PW Token For 𝐌𝐏𝐃 𝐔𝐑𝐋\n🔹Send /d for use default")
+    await editable.edit("🔹Enter Your PW Token For 𝐌𝐏𝐃 𝐔𝐑𝐋\n🔹Send /d for use default\n\n`720, 480, 360, 240`")
     input4: Message = await bot.listen(editable.chat.id)
     raw_text4 = input4.text
     await input4.delete()
@@ -640,7 +640,7 @@ async def txt_handler(bot: Client, m: Message):
                             pass
 
                     # Step 7: Try different qualities
-                    qualities = [720, 480, 360, 240]
+                    qualities = [f"{raw_text4}"]
                     url_found = ""
                     for q in qualities:
                         hls_url = transformed_video_url.replace("master.mpd", f"hls/{q}/main.m3u8")
@@ -1048,7 +1048,7 @@ async def txt_handler(bot: Client, m: Message):
                         access_token = ""
 
                     # Step 7: Try different qualities
-                    qualities = [720, 480, 360, 240]
+                    qualities = [f"{raw_text4}"]
                     url_found = None
 
                     for quality in qualities:
@@ -1166,8 +1166,8 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
             try:
-                cc = f'**|🇮🇳| {cleaned_name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId ~ {raw_text65}**'
-                cc1 = f'**|🇮🇳| {cleaned_name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId ~ {raw_text65}**'
+                cc = f'**|🇮🇳| {cleaned_name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
+                cc1 = f'**|🇮🇳| {cleaned_name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cczip = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**📁 Title :** `{name1}`\n**├── Extention :**  {CR} .zip\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccimg = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🖼️ Title :** `{name1}`\n**├── Extention :**  {CR} .jpg\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccm = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🎵 Title :** `{name1}`\n**├── Extention :**  {CR} .mp3\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
