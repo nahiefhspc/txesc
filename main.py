@@ -1315,13 +1315,11 @@ async def txt_handler(bot: Client, m: Message):
                            f"╰━🖇️𝐑𝐞𝐦𝐚𝐢𝐧 𝐋𝐢𝐧𝐤𝐬 » {remaining_links}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n┃\n" \
-                           f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
                            f"╰━📚𝐁𝐚𝐭𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
-                           f"🛑**Send** /stop **to stop process**\n┃\n" \
-                           f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ [ELIESE🐦](https://t.me/+MdZ2996M2G43MWFl)"                    
+                           f"🛑**Send** /stop **to stop process**"                    
                     prog = await m.reply_text(Show, disable_web_page_preview=True)
                     res_file = await helper.download_video(url, cmd, name)
                     filename = res_file
@@ -1333,7 +1331,7 @@ async def txt_handler(bot: Client, m: Message):
                     continue
                 
             except Exception as e:
-                await m.reply_text(f'⚠️**Downloading Failed**⚠️\n**Name** =>> `{str(count).zfill(3)} {name1}`\n**Url** =>> {link0}', disable_web_page_preview=True)
+                await m.reply_text(f'⚠️**Downloading Failed**⚠️\n**ID** =>> `{str(count).zfill(3)}`\n\n**Name** - `{name1}`**', disable_web_page_preview=True)
                 count += 1
                 failed_count += 1
                 continue
