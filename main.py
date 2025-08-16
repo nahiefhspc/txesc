@@ -306,7 +306,6 @@ async def txt_handler(bot: Client, m: Message):
     editable = await m.reply_text(f"`🔹Hi I am Poweful TXT Downloader📥 Bot.\n🔹Send me the txt file and wait.`")
     input: Message = await bot.listen(editable.chat.id)
     y = await input.download()
-    await input.delete()
     file_name, ext = os.path.splitext(os.path.basename(y))
 
     if file_name.endswith("_helper"):
