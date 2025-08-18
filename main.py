@@ -672,7 +672,7 @@ async def txt_handler(bot: Client, m: Message):
             elif "embed" in url:
                 ytf = f"bestvideo[height<={raw_text2}]+bestaudio/best[height<={raw_text2}]"
             else:
-                ytf = f"b[height<={raw_text2}]/bv[height<={raw_text2}]+ba/b/bv+ba"
+                ytf = f"b[height<={raw_text2}][protocol=https]/bv[height<={raw_text2}][protocol=https]+ba/b/bv+ba"
 
             if "jw-prod" in url:
                 cmd = f'yt-dlp -o "{name}.mp4" "{url}"'
@@ -685,14 +685,13 @@ async def txt_handler(bot: Client, m: Message):
                 cmd = [
                     "ffmpeg",
                     "-protocol_whitelist", "file,http,https,tcp,tls,crypto",  # allow HLS
-                    "-ss", "5",                        # skip first 5 seconds
+                    "-ss", "15",                        # skip first 5 seconds
                     "-i", url,                         # input m3u8
-                    "-vf", "scale=-1:720",             # force 720p height (keep aspect ratio)
+                    "-vf", "scale=-2:720",             # force 720p height (keep aspect ratio)
                     "-c:v", "libx264",                 # compress with x264
-                    "-preset", "ultrafast",            # 🚀 fastest encode
-                    "-tune", "zerolatency",            # reduce latency
-                    "-crf", "23",                      # quality vs size
-                    "-c:a", "aac", "-b:a", "128k",     # audio encode
+                    "-preset", "ultrafast",            # 🚀 fastest encode                       
+                    "-crf", "28",                      # quality vs size
+                    "-c:a", "aac", "-b:a", "64k",     # audio encode
                     "-movflags", "+faststart",         # optimize for streaming
                     f"{name}.mp4"
                 ]
