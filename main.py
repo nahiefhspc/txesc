@@ -57,13 +57,13 @@ photologo = 'https://tinypic.host/images/2025/02/07/DeWatermark.ai_1738952933236
 photoyt = 'https://tinypic.host/images/2025/03/18/YouTube-Logo.wine.png'
 photocp = 'https://tinypic.host/images/2025/03/28/IMG_20250328_133126.jpg'
 photozip = 'https://envs.sh/cD_.jpg'
-log_chat_id = "-1002976562617"  # Replace with your Telegram user ID or log channel ID
+log_chat_id = "-1002976562617"
 
 async def show_random_emojis(message: Message):
     emojis = ['🐼', '🐶', '🐅', '⚡️', '🚀', '✨', '💥', '☠️', '🥂', '🍾', '📬', '👻', '👀', '🌹', '💀', '🐇', '⏳', '🔮', '🦔', '📖', '🦁', '🐱', '🐻‍❄️', '☁️', '🚹', '🚺', '🐠', '🦋']
     if message is None:
         print("Error: Message is None in show_random_emojis")
-        return None  # Return None to indicate failure
+        return None
     try:
         emoji_message = await message.reply_text(' '.join(random.choices(emojis, k=1)))
         return emoji_message
@@ -83,7 +83,6 @@ keyboard = InlineKeyboardMarkup(
     ]
 )
 
-# Image URLs for the random image feature
 image_urls = [
     "https://tinypic.host/images/2025/02/07/IMG_20250207_224444_975.jpg",
     "https://tinypic.host/images/2025/02/07/DeWatermark.ai_1738952933236-1.png",
@@ -97,25 +96,20 @@ async def cookies_handler(client: Client, m: Message):
     )
 
     try:
-        # Wait for the user to send the cookies file
         input_message: Message = await client.listen(m.chat.id, timeout=30)
         if input_message is None:
             await client.send_message(log_chat_id, f"Error: Cookies input timed out for user {m.from_user.id}")
             return
 
-        # Validate the uploaded file
         if not input_message.document or not input_message.document.file_name.endswith(".txt"):
             await m.reply_text("Invalid file type. Please upload a .txt file.")
             return
 
-        # Download the cookies file
         downloaded_path = await input_message.download()
 
-        # Read the content of the uploaded file
         with open(downloaded_path, "r") as uploaded_file:
             cookies_content = uploaded_file.read()
 
-        # Replace the content of the target cookies file
         with open(cookies_file_path, "w") as target_file:
             target_file.write(cookies_content)
 
@@ -130,7 +124,6 @@ async def cookies_handler(client: Client, m: Message):
 @bot.on_message(filters.command(["t2t"]))
 async def text_to_txt(client, message: Message):
     user_id = str(message.from_user.id)
-    # Inform the user to send the text data and its desired file name
     editable = await message.reply_text(f"<blockquote>Welcome to the Text to .txt Converter!\nSend the **text** for convert into a `.txt` file.</blockquote>")
     input_message: Message = await bot.listen(message.chat.id, timeout=30)
     if input_message is None:
@@ -167,7 +160,6 @@ async def text_to_txt(client, message: Message):
     await message.reply_document(document=txt_file, caption=f"`{custom_file_name}.txt`\n\nYou can now download your content! 📥")
     os.remove(txt_file)
 
-# Define paths for uploaded file and processed file
 UPLOAD_FOLDER = '/path/to/upload/folder'
 EDITED_FILE_PATH = '/path/to/save/edited_output.txt'
 
@@ -188,7 +180,6 @@ async def youtube_to_txt(client, message: Message):
     await input_message.delete()
     await editable.delete()
 
-    # Fetch the YouTube information using yt-dlp with cookies
     ydl_opts = {
         'quiet': True,
         'extract_flat': True,
@@ -212,7 +203,6 @@ async def youtube_to_txt(client, message: Message):
             await client.send_message(log_chat_id, f"Error in y2t: {str(e)} for user {user_id}")
             return
 
-    # Extract the YouTube links
     videos = []
     if 'entries' in result:
         for entry in result['entries']:
@@ -224,19 +214,16 @@ async def youtube_to_txt(client, message: Message):
         url = result.get('url', '')
         videos.append(f"{video_title}: {url}")
 
-    # Create and save the .txt file with the custom name
     txt_file = os.path.join("downloads", f'{title}.txt')
     os.makedirs(os.path.dirname(txt_file), exist_ok=True)
     with open(txt_file, 'w') as f:
         f.write('\n'.join(videos))
 
-    # Send the generated text file to the user with a pretty caption
     await message.reply_document(
         document=txt_file,
         caption=f'<a href="{youtube_link}">__**Click Here to Open Link**__</a>\n<pre><code>{title}.txt</code></pre>\n'
     )
 
-    # Remove the temporary text file after sending
     os.remove(txt_file)
 
 m_file_path = "main.py"
@@ -325,8 +312,6 @@ async def send_logs(client: Client, m: Message):
         await client.send_message(log_chat_id, f"Error in send_logs: {str(e)}")
 
 async def decrypt_file_txt(file_path):
-    # This function needs to be implemented in the helper module
-    # Placeholder for now
     return file_path
 
 @bot.on_message(filters.command(["drm"]))
@@ -444,7 +429,7 @@ async def txt_handler(bot: Client, m: Message):
     else:
         CR = raw_text3
 
-    await editable.edit("🔹Enter Your PW Token For 𝐌𝐏𝐃 𝐔𝐑𝐋\n🔹Send /d for use default\n\n`720, 480, 360, 240`")
+    await editable.edit("🔹Enter Your PW Token For 𝐌𝐏𝐃 𝐔𝐑𝐋\n🔹Send /d for use default\n🔹Send /d1 for lower quality\n🔹Send /d2 for lowest quality")
     input4: Message = await bot.listen(editable.chat.id, timeout=30)
     if input4 is None:
         await editable.edit("Error: No PW token received within timeout.")
@@ -488,23 +473,17 @@ async def txt_handler(bot: Client, m: Message):
     arg = int(raw_text)
     try:
         for i in range(arg-1, len(links)):
-            # URL processing
             Vxy = links[i][1].replace("file/d/", "uc?export=download&id=").replace("www.youtube-nocookie.com/embed", "youtu.be").replace("?modestbranding=1", "").replace("/view?usp=sharing", "")
-            # Ensure no double "https://"
             if not Vxy.startswith("https://"):
                 url = "https://" + Vxy
             else:
                 url = Vxy
-            # Title processing
             title = links[i][0]
-            # Split title to extract name1 and raw_text65
             if "💀" in title:
-                # Split on "💀" to get parts
                 parts = title.split("💀")
-                name1 = parts[0].strip()  # "Newton's Laws of Motion : 01"
-                raw_text65 = parts[1].strip()  # "OPMASTER"
+                name1 = parts[0].strip()
+                raw_text65 = parts[1].strip()
             else:
-                # Fallback if no "💀" is found
                 name1 = title.strip()
                 raw_text65 = ""
 
@@ -512,7 +491,6 @@ async def txt_handler(bot: Client, m: Message):
             name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{cleaned_name1[:60]}'
             
             if "rarestudy" in url:                
-                # Retry GET
                 def fetch_with_retries(local_url, headers=None, max_retries=8, timeout=6):
                     for attempt in range(max_retries):
                         try:
@@ -525,7 +503,6 @@ async def txt_handler(bot: Client, m: Message):
                                 time.sleep(2)
                     return None
 
-                # Transform /media to /video-data
                 def transform_rarestudy_url(input_url):
                     parsed = urlparse(input_url)
                     if '/media/' in input_url:
@@ -538,7 +515,6 @@ async def txt_handler(bot: Client, m: Message):
                         return urlunparse((parsed.scheme, parsed.netloc, '/video-data', '', new_query, ''))
                     return input_url
 
-                # Step 1: Fetch session token
                 token_resp = fetch_with_retries(
                     "https://rarekatoken2.vercel.app/token",
                     headers={'Content-Type': 'application/json'}
@@ -551,7 +527,6 @@ async def txt_handler(bot: Client, m: Message):
                 else:
                     session_token = "raw_text98"
 
-                # Step 2: Fetch original /media link (with headers)
                 media_headers = {
                     'authority': 'rarestudy.site',
                     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -581,11 +556,9 @@ async def txt_handler(bot: Client, m: Message):
                     print("❌ Failed to fetch /media link.")
                     video_url = ""
                 else:
-                    # Step 3: Transform URL
                     transformed_url = transform_rarestudy_url(url)
                     print(f"➡ Transformed URL: {transformed_url}")
 
-                    # Step 4: Fetch transformed link (video metadata)
                     meta_headers = {
                         'authority': 'rarestudy.site',
                         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -626,13 +599,11 @@ async def txt_handler(bot: Client, m: Message):
                 else:
                     print(f"➡ Raw video URL: {video_url}")
 
-                    # Step 5: Replace CDN domain
                     transformed_video_url = video_url.replace(
                         "https://sec-prod-mediacdn.pw.live",
                         "https://anonymouspwplayer-0e5a3f512dec.herokuapp.com/sec-prod-mediacdn.pw.live"
                     )
 
-                    # Step 6: Fetch access token
                     access_resp = fetch_with_retries(
                         "https://api-accesstoken.vercel.app",
                         headers={'Content-Type': 'application/json'}
@@ -644,8 +615,16 @@ async def txt_handler(bot: Client, m: Message):
                         except json.JSONDecodeError:
                             pass
 
-                    # Step 7: Try different qualities
-                    qualities = [720, 480, 360, 240]
+                    # Set qualities based on raw_text4
+                    if raw_text4 == "/d":
+                        qualities = [720, 480, 360, 240]
+                    elif raw_text4 == "/d1":
+                        qualities = [480, 360, 240]
+                    elif raw_text4 == "/d2":
+                        qualities = [360, 240]
+                    else:
+                        qualities = [720, 480, 360, 240]  # Default fallback
+
                     url_found = ""
                     for q in qualities:
                         hls_url = transformed_video_url.replace("master.mpd", f"hls/{q}/main.m3u8")
@@ -664,7 +643,6 @@ async def txt_handler(bot: Client, m: Message):
                         url_found = f"{hls_url}&token={access_token}" if access_token else hls_url
                         print(f"⚠ Using fallback {fallback_q}p: {url_found}")
 
-                    # Final URL
                     url = url_found
 
             if "youtu" in url:
@@ -811,7 +789,7 @@ async def txt_handler(bot: Client, m: Message):
                            f"╰━🖇️𝐑𝐞𝐦𝐚𝐢𝐧 𝐋𝐢𝐧𝐤𝐬 » {remaining_links}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Dʀᴍ Sᴛᴀʀᴛᴇᴅ...⏳**\n┃\n" \
-                           f'┣💃𝐂𝐫𝐞𝐝𝐢𝐭 » {CR}\n┃\n' \
+                           f'┣💃𝐂𝐫𝐞𝐝𝐢𝐴𝐭 » {CR}\n┃\n' \
                            f"╰━📚𝐁𝐚𝐭𝐚𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n" \
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                            f"📚�	T𝐢𝐭𝐥𝐞 » {name}\n┃\n" \
