@@ -679,9 +679,32 @@ async def txt_handler(bot: Client, m: Message):
             elif "webvideos.classplusapp." in url:
                 cmd = f'yt-dlp --add-header "referer:https://web.classplusapp.com/" --add-header "x-cdn-tag:empty" -f "{ytf}" "{url}" -o "{name}.mp4"'
             elif "youtube.com" in url or "youtu.be" in url:
-                cmd = f'yt-dlp --cookies {cookies_file_path} -f "{ytf}" "{url}" -o "{name}.mp4"'
+                cmd = f'yt-dlp --cookies {cookies_file_path} -f "{ytf}" "{url}" -o "{name}.mp4"'            
+            elif ".m3u8" in url:
+                # Direct ffmpeg command for .m3u8
+                cmd = [
+                    "ffmpeg",
+                    "-protocol_whitelist", "file,http,https,tcp,tls,crypto",  # allow HLS
+                    "-ss", "5",                        # skip first 5 seconds
+                    "-i", url,                         # input m3u8
+                    "-vf", "scale=-1:720",             # force 720p height (keep aspect ratio)
+                    "-c:v", "libx264",                 # compress with x264
+                    "-preset", "ultrafast",            # 🚀 fastest encode
+                    "-tune", "zerolatency",            # reduce latency
+                    "-crf", "23",                      # quality vs size
+                    "-c:a", "aac", "-b:a", "128k",     # audio encode
+                    "-movflags", "+faststart",         # optimize for streaming
+                    f"{name}.mp4"
+                ]
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
+
+            # Run command (if it's a list, it’s ffmpeg; if str, it’s yt-dlp)
+            if isinstance(cmd, list):
+                subprocess.run(cmd, check=True)
+            else:
+                subprocess.run(cmd, shell=True, check=True)
+            
             try:
                 cc = f'**|🇮🇳| {cleaned_name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cc1 = f'**|🇮🇳| {cleaned_name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
