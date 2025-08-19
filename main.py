@@ -483,25 +483,30 @@ async def txt_handler(bot: Client, m: Message):
             raw_text65 = ""
             raw_text102 = ""
             print(f"Raw title: '{title}'")
-            parts = title.split("💀")
-            print(f"After 💀 split: {parts}")
-            name1 = parts[0].strip() if parts else ""
-            if len(parts) > 1:
-                second_part = parts[1].strip()  # Get the part after first 💀
-                # Remove trailing 💀 if present (for both formats)
-                if second_part.endswith("💀"):
-                    second_part = second_part[:-1].strip()
-                print(f"Second part (cleaned): '{second_part}'")
-                # Check for 🤩 to extract raw_text65 and raw_text102
-                if "🤩" in second_part:
-                    sub_parts = second_part.split("🤩")
-                    print(f"After 🤩 split: {sub_parts}")
-                    raw_text65 = sub_parts[0].strip() if sub_parts else ""
-                    raw_text102 = sub_parts[1].strip() if len(sub_parts) > 1 else ""
-                else:
-                    raw_text65 = second_part
-            else:
-                raw_text65 = ""
+            if "💀" in title:
+                parts = title.split("💀")
+                print(f"After 💀 split: {parts}")
+                name1 = parts[0].strip() if parts else ""       
+                # Process the second part
+                if len(parts) > 1:
+                    second_part = parts[1].strip()
+                    # Remove trailing 💀 if present
+                   if second_part.endswith("💀"):
+                       second_part = second_part[:-1].strip()
+                   print(f"Second part (cleaned): '{second_part}'")
+                   # Split by 🤩 (U+1F929)
+                   if "🤩" in second_part:
+                       sub_parts = second_part.split("🤩")
+                       print(f"After 🤩 split: {sub_parts}")
+                       raw_text65 = sub_parts[0].strip() if sub_parts else ""
+                       raw_text102 = sub_parts[1].strip() if len(sub_parts) > 1 else ""
+                   else:
+                       raw_text65 = second_part
+                       raw_text102 = ""
+           else:
+               name1 = title.strip()
+               raw_text65 = ""
+               raw_text102 = ""
 
             cleaned_name1 = name1.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{cleaned_name1[:60]}'
