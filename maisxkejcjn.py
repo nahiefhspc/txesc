@@ -482,6 +482,14 @@ async def txt_handler(bot: Client, m: Message):
                 url = mpd
                 keys_string = " ".join([f"--key {key}" for key in keys])
 
+            elif url.startswith("https://stream.pwjarvis.app"):
+                match = re.search(r'/hls/(\d+)/main\.m3u8$', url)
+                if match:
+                    raw_text62 = match.group(1)
+                else:
+                    raw_text62 = None
+                url = url
+
             elif "tencdn.classplusapp" in url:
                 headers = {
                     'Host': 'api.classplusapp.com',
@@ -1165,8 +1173,8 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
             try:
-                cc = f'**|🇮🇳| {cleaned_name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
-                cc1 = f'**|🇮🇳| {cleaned_name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
+                cc = f'**|🇮🇳| {cleaned_name1}\n\n😎 ℚ𝕦𝕒𝕝𝕚𝕥𝕪 ➠ {raw_text62}p\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
+                cc1 = f'**|🇮🇳| {cleaned_name1}\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cczip = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**📁 Title :** `{name1}`\n**├── Extention :**  {CR} .zip\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccimg = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🖼️ Title :** `{name1}`\n**├── Extention :**  {CR} .jpg\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccm = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🎵 Title :** `{name1}`\n**├── Extention :**  {CR} .mp3\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
