@@ -479,6 +479,9 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 url = Vxy
             title = links[i][0]
+            name1 = ""
+            raw_text65 = ""
+            raw_text102 = ""
             if "💀" in title:
                 parts = title.split("💀")
                 name1 = parts[0].strip()
