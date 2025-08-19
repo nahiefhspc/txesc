@@ -479,34 +479,13 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 url = Vxy
             title = links[i][0]
-            name1 = ""
-            raw_text65 = ""
-            raw_text102 = ""
-            print(f"Raw title: '{title}'")
             if "💀" in title:
                 parts = title.split("💀")
-                print(f"After 💀 split: {parts}")
-                name1 = parts[0].strip() if parts else ""       
-                # Process the second part
-                if len(parts) > 1:
-                    second_part = parts[1].strip()
-                    # Remove trailing 💀 if present
-                    if second_part.endswith("💀"):
-                        second_part = second_part[:-1].strip()
-                    print(f"Second part (cleaned): '{second_part}'")
-                    # Split by 🤩 (U+1F929)
-                    if "🤩" in second_part:
-                        sub_parts = second_part.split("🤩")
-                        print(f"After 🤩 split: {sub_parts}")
-                        raw_text65 = sub_parts[0].strip() if sub_parts else ""
-                        raw_text102 = sub_parts[1].strip() if len(sub_parts) > 1 else ""
-                    else:
-                        raw_text65 = second_part
-                        raw_text102 = ""
+                name1 = parts[0].strip()
+                raw_text65 = parts[1].strip()
             else:
                 name1 = title.strip()
                 raw_text65 = ""
-                raw_text102 = ""
 
             cleaned_name1 = name1.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{cleaned_name1[:60]}'
@@ -666,6 +645,14 @@ async def txt_handler(bot: Client, m: Message):
 
                     url = url_found
 
+                elif url.startswith("https://stream.pwjarvis.app"):
+                    match = re.search(r'/hls/(\d+)/main\.m3u8$', url)
+                    if match:
+                        raw_text87 = match.group(1)
+                    else:
+                        raw_text87 = None
+                    url = url
+
             if "youtu" in url:
                 ytf = f"b[height<={raw_text2}][ext=mp4]/bv[height<={raw_text2}][ext=mp4]+ba[ext=m4a]/b[ext=mp4]"
             elif "embed" in url:
@@ -682,8 +669,8 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'                        
             try:
-                cc = f'**|🇮🇳| {cleaned_name1}.mkv\n\n😎 𝗤𝘂𝗮𝗹𝗶𝘁𝘆 ➠ {raw_text102}\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
-                cc1 = f'**|🇮🇳| {cleaned_name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
+                cc = f'**|🇮🇳| {cleaned_name1}\n\n😎 𝗤𝘂𝗮𝗹𝗶𝘁𝘆 ➠ {raw_text87}\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
+                cc1 = f'**|🇮🇳| {cleaned_name1}\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cczip = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**📁 Title :** `{name1}`\n**├── Extention :**  {CR} .zip\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccimg = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🖼️ Title :** `{name1}`\n**├── Extention :**  {CR} .jpg\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccm = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🎵 Title :** `{name1}`\n**├── Extention :**  {CR} .mp3\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
