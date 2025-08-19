@@ -482,10 +482,16 @@ async def txt_handler(bot: Client, m: Message):
             if "💀" in title:
                 parts = title.split("💀")
                 name1 = parts[0].strip()
-                raw_text65 = parts[1].strip()
+                # Check if there's a 🤩 delimiter in the second part
+                if len(parts) > 1 and "🤩" in parts[1]:
+                    sub_parts = parts[1].split("🤩")
+                    raw_text65 = sub_parts[0].strip()
+                    if len(sub_parts) > 1:
+                        raw_text102 = sub_parts[1].strip()
+                else:
+                    raw_text65 = parts[1].strip() if len(parts) > 1 else ""
             else:
                 name1 = title.strip()
-                raw_text65 = ""
 
             cleaned_name1 = name1.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{cleaned_name1[:60]}'
@@ -661,7 +667,7 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'                        
             try:
-                cc = f'**|🇮🇳| {cleaned_name1}.mkv\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
+                cc = f'**|🇮🇳| {cleaned_name1}.mkv\n\n😎 𝗤𝘂𝗮𝗹𝗶𝘁𝘆 ➠ {raw_text102}\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cc1 = f'**|🇮🇳| {cleaned_name1}.pdf\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cczip = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**📁 Title :** `{name1}`\n**├── Extention :**  {CR} .zip\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
                 ccimg = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🖼️ Title :** `{name1}`\n**├── Extention :**  {CR} .jpg\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** {CR}'
