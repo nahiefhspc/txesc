@@ -482,7 +482,7 @@ async def txt_handler(bot: Client, m: Message):
                 url = mpd
                 keys_string = " ".join([f"--key {key}" for key in keys])
 
-            elif url.startswith("https://stream.pwjarvis.app"):
+            elif "https://stream" in url or "/main.m3u8" in url:
                 match = re.search(r'/hls/(\d+)/main\.m3u8$', url)
                 if match:
                     raw_text62 = match.group(1)
