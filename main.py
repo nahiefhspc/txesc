@@ -40,6 +40,9 @@ import zipfile
 import shutil
 import ffmpeg
 
+OP_COMMAND = os.environ.get("OP_COMMAND", "drm")
+NONOP_COMMAND = os.environ.get("NONOP_COMMAND", "stop")
+
 # Initialize the bot
 bot = Client(
     "bot",
@@ -226,7 +229,7 @@ async def getmfile_handler(client: Client, m: Message):
     except Exception as e:
         await m.reply_text(f"⚠️ An error occurred: {str(e)}")
 
-@bot.on_message(filters.command(["stop"]))
+@bot.on_message(filters.command([NONOP_COMMAND]))
 async def restart_handler(_, m: Message):
     await m.reply_text("**ˢᵗᵒᵖᵖᵉᵈ ᵇᵃᵇʸ**", True)
     os.execl(sys.executable, sys.executable, *sys.argv)
@@ -301,7 +304,7 @@ async def decrypt_file_txt(file_path):
     # Placeholder for now
     return file_path
 
-@bot.on_message(filters.command(["drm"]))
+@bot.on_message(filters.command([OP_COMMAND]))
 async def txt_handler(bot: Client, m: Message):
     editable = await m.reply_text(f"`🔹Hi I am Poweful TXT Downloader📥 Bot.\n🔹Send me the txt file and wait.`")
     input: Message = await bot.listen(editable.chat.id)
