@@ -384,39 +384,10 @@ async def txt_handler(bot: Client, m: Message):
     except Exception:
         res = "UN"
 
-    await editable.edit("`🔹Enter Your Name\n🔹Send 1 for use default`")
-    input3: Message = await bot.listen(editable.chat.id)
-    raw_text3 = input3.text
-    await input3.delete()
-    if raw_text3 == '1':
-        CR = '[𝄟⃝‌🐬🇳‌ɪᴋʜɪʟ𝄟⃝🐬](https://t.me/+MdZ2996M2G43MWFl)'
-    else:
-        CR = raw_text3
-
-    await editable.edit("🔹Enter Your PW Token For 𝐌𝐏𝐃 𝐔𝐑𝐋\n🔹Send /d for use default\n\n`720, 480, 360, 240`")
-    input4: Message = await bot.listen(editable.chat.id)
-    raw_text4 = input4.text
-    await input4.delete()
-
-    await editable.edit("🔹Enter Your PW Token 😔 2nd wala Bro\n🔹Send /d for use default")
-    input20: Message = await bot.listen(editable.chat.id)
-    raw_text20 = input20.text
-    await input20.delete()    
-
-    await editable.edit(f"🔹Send the Video Thumb URL\n🔹Send /d for use default\n\n🔹You can direct upload thumb\n🔹Send **No** for use default")
-    input6: Message = await bot.listen(editable.chat.id)
-    raw_text6 = input6.text
-    await input6.delete()
-
-    if input6.photo:
-        thumb = await input6.download()
-    elif raw_text6.startswith(("http://", "https://")):
-        getstatusoutput(f"wget '{raw_text6}' -O 'thumb.jpg'")
-        thumb = "thumb.jpg"
-    elif raw_text6.lower() == "no" or raw_text6 == "/d":
-        thumb = photoyt
-    else:
-        thumb = raw_text6
+    default_thumb_url = "https://files.catbox.moe/g02k3k.jpg"
+    # Download the fixed thumbnail
+    getstatusoutput(f"wget '{default_thumb_url}' -O 'thumb.jpg'")
+    thumb = "thumb.jpg"
     await editable.delete()
     await m.reply_text(f"🎯Target Batch : `{b_name}`")
 
