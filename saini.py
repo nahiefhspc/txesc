@@ -291,12 +291,8 @@ async def download_and_decrypt_video(url, cmd, name, key):
             return None  
 
 async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
-    # Combine thumbnail generation and video trimming in one FFmpeg command
-    output_filename = f"processed_{filename}"
-    subprocess.run(
-        f'ffmpeg -i "{filename}" -ss 00:00:15 -c:v copy -c:a copy "{output_filename}" -ss 00:00:20 -vframes 1 "{filename}.jpg"',
-        shell=True
-    )
+    # Generate thumbnail, skipping first 15 seconds
+    subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:20 -vframes 1 "{filename}.jpg"', shell=True)
     await prog.delete(True)
     reply = await m.reply_text(f"**Generate Thumbnail:**\n{name}")
     try:
@@ -309,10 +305,14 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         await m.reply_text(str(e))
       
     # Get duration of the video (after skipping 15 seconds)
-    dur = int(duration(filename)) - 15  # Adjust duration to account for skipped 15 seconds
+    dur = int(duration(filename)) - 16  # Adjust duration to account for skipped 15 seconds
     start_time = time.time()
 
     try:
+        # Process video, skipping first 15 seconds
+        output_filename = f"processed_{filename}"
+        subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:16 -c:v copy -c:a copy "{output_filename}"', shell=True)
+        
         await m.reply_video(
             output_filename,
             caption=cc,
