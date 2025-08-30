@@ -227,45 +227,33 @@ def time_name():
     current_time = now.strftime("%H%M%S")
     return f"{date} {current_time}.mp4"
 
-async def download_video(url, cmd, name):
-    # Optimized aria2c command with increased connections and split segments
-    download_cmd = (
-        f'{cmd} -R 10 --fragment-retries 10 '
-        f'--external-downloader aria2c '
-        f'--downloader-args "aria2c: -x 32 -j 64 -s 16 --min-split-size=1M --retry-wait=2"'
-    )
+async def download_video(url,cmd, name):
+    download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 32 -j 64"'
     global failed_counter
     print(download_cmd)
     logging.info(download_cmd)
-
-    # Use asyncio to run the subprocess non-blocking
-    process = await asyncio.create_subprocess_shell(
-        download_cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await process.communicate()
-
-    # Check if the download was successful
-    if "visionias" in cmd and process.returncode != 0 and failed_counter <= 10:
+    k = subprocess.run(download_cmd, shell=True)
+    if "visionias" in cmd and k.returncode != 0 and failed_counter <= 10:
         failed_counter += 1
-        # Exponential backoff for retries
-        await asyncio.sleep(2 ** failed_counter)
+        await asyncio.sleep(5)
         await download_video(url, cmd, name)
     failed_counter = 0
-
     try:
-        # Check for various file extensions
-        possible_extensions = [".mp4", ".webm", ".mkv", ".mp4.webm"]
-        for ext in possible_extensions:
-            filename = f"{name}{ext}" if ext != ".mp4.webm" else f"{name}.mp4.webm"
-            if os.path.isfile(filename):
-                return filename
+        if os.path.isfile(name):
+            return name
+        elif os.path.isfile(f"{name}.webm"):
+            return f"{name}.webm"
+        name = name.split(".")[0]
+        if os.path.isfile(f"{name}.mkv"):
+            return f"{name}.mkv"
+        elif os.path.isfile(f"{name}.mp4"):
+            return f"{name}.mp4"
+        elif os.path.isfile(f"{name}.mp4.webm"):
+            return f"{name}.mp4.webm"
 
-        # Fallback to default mp4 if no file is found
-        return f"{name.split('.')[0]}.mp4"
-    except FileNotFoundError:
-        return f"{name.split('.')[0]}.mp4"
+        return name
+    except FileNotFoundError as exc:
+        return os.path.isfile.splitext[0] + "." + "mp4"
 
 async def send_doc(bot: Client, m: Message, cc, ka, cc1, prog, count, name):
     reply = await m.reply_text(f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » {name}\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ 𝙎𝘼𝙄𝙉𝙄 𝘽𝙊𝙏𝙎🐦")
