@@ -227,35 +227,45 @@ def time_name():
     current_time = now.strftime("%H%M%S")
     return f"{date} {current_time}.mp4"
 
-
-async def download_video(url,cmd, name):
-    download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
+async def download_video(url, cmd, name):
+    # Optimized aria2c command with increased connections and split segments
+    download_cmd = (
+        f'{cmd} -R 10 --fragment-retries 10 '
+        f'--external-downloader aria2c '
+        f'--downloader-args "aria2c: -x 32 -j 64 -s 16 --min-split-size=1M --retry-wait=2"'
+    )
     global failed_counter
     print(download_cmd)
     logging.info(download_cmd)
-    k = subprocess.run(download_cmd, shell=True)
-    if "visionias" in cmd and k.returncode != 0 and failed_counter <= 10:
+
+    # Use asyncio to run the subprocess non-blocking
+    process = await asyncio.create_subprocess_shell(
+        download_cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+
+    # Check if the download was successful
+    if "visionias" in cmd and process.returncode != 0 and failed_counter <= 10:
         failed_counter += 1
-        await asyncio.sleep(5)
+        # Exponential backoff for retries
+        await asyncio.sleep(2 ** failed_counter)
         await download_video(url, cmd, name)
     failed_counter = 0
+
     try:
-        if os.path.isfile(name):
-            return name
-        elif os.path.isfile(f"{name}.webm"):
-            return f"{name}.webm"
-        name = name.split(".")[0]
-        if os.path.isfile(f"{name}.mkv"):
-            return f"{name}.mkv"
-        elif os.path.isfile(f"{name}.mp4"):
-            return f"{name}.mp4"
-        elif os.path.isfile(f"{name}.mp4.webm"):
-            return f"{name}.mp4.webm"
+        # Check for various file extensions
+        possible_extensions = [".mp4", ".webm", ".mkv", ".mp4.webm"]
+        for ext in possible_extensions:
+            filename = f"{name}{ext}" if ext != ".mp4.webm" else f"{name}.mp4.webm"
+            if os.path.isfile(filename):
+                return filename
 
-        return name
-    except FileNotFoundError as exc:
-        return os.path.isfile.splitext[0] + "." + "mp4"
-
+        # Fallback to default mp4 if no file is found
+        return f"{name.split('.')[0]}.mp4"
+    except FileNotFoundError:
+        return f"{name.split('.')[0]}.mp4"
 
 async def send_doc(bot: Client, m: Message, cc, ka, cc1, prog, count, name):
     reply = await m.reply_text(f"**★彡 ᵘᵖˡᵒᵃᵈⁱⁿᵍ 彡★ ...⏳**\n\n📚𝐓𝐢𝐭𝐥𝐞 » {name}\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ 𝙎𝘼𝙄𝙉𝙄 𝘽𝙊𝙏𝙎🐦")
@@ -302,20 +312,21 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             thumbnail = f"{filename}.jpg"
         else:
             thumbnail = thumb
+            
     except Exception as e:
         await m.reply_text(str(e))
       
-    # Adjust duration to account for skipped 15 seconds
-    dur = int(duration(filename)) - 15
+    # Get duration of the video (after skipping 15 seconds)
+    dur = int(duration(filename)) - 15  # Adjust duration to account for skipped 15 seconds
     start_time = time.time()
 
     try:
-        # Use FFmpeg to pipe the video, skipping first 15 seconds
-        ffmpeg_cmd = f'ffmpeg -i "{filename}" -ss 00:00:15 -c:v copy -c:a copy -f matroska -'
-        process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, shell=True)
+        # Process video, skipping first 15 seconds
+        output_filename = f"processed_{filename}"
+        subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:15 -c:v copy -c:a copy "{output_filename}"', shell=True)
         
         await m.reply_video(
-            process.stdout,  # Stream video directly from FFmpeg
+            output_filename,
             caption=cc,
             supports_streaming=True,
             height=720,
@@ -325,15 +336,15 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             progress=progress_bar,
             progress_args=(reply, start_time)
         )
+        os.remove(output_filename)  # Clean up processed video file
     except Exception:
-        # Fallback to document if video streaming fails
-        process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, shell=True)
         await m.reply_document(
-            process.stdout,
+            output_filename,
             caption=cc,
             progress=progress_bar,
             progress_args=(reply, start_time)
         )
+        os.remove(output_filename)  # Clean up processed video file in case of document fallback
     
     finally:
         await reply.delete(True)
