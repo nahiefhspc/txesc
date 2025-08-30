@@ -341,26 +341,50 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
                 height=720,
                 width=1280,
                 thumb=thumbnail,
-                duration=dur,
-                progress=progress_bar,
-                progress_args=(reply, start_time)
-            )
-        except Exception:
-            # Fallback to document if video upload fails
-            await m.reply_document(
-                video_process.stdout,
-                caption=cc,
-                progress=progress_bar,
-                progress_args=(reply, start_time)
-            )
-        finally:
-            # Ensure the FFmpeg process is terminated
-            video_process.terminate()
-            await video_process.wait()
+async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
+    # Generate thumbnail, skipping first 15 seconds
+    subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:15 -vframes 1 "{filename}.jpg"', shell=True)
+    await prog.delete(True)
+    reply = await m.reply_text(f"**Generate Thumbnail:**\n{name}")
+    try:
+        if thumb == "/d":
+            thumbnail = f"{filename}.jpg"
+        else:
+            thumbnail = thumb
     except Exception as e:
-        await m.reply_text(f"Error: {str(e)}")
+        await m.reply_text(str(e))
+      
+    # Adjust duration to account for skipped 15 seconds
+    dur = int(duration(filename)) - 15
+    start_time = time.time()
+
+    try:
+        # Use FFmpeg to pipe the video, skipping first 15 seconds
+        ffmpeg_cmd = f'ffmpeg -i "{filename}" -ss 00:00:15 -c:v copy -c:a copy -f matroska -'
+        process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, shell=True)
+        
+        await m.reply_video(
+            process.stdout,  # Stream video directly from FFmpeg
+            caption=cc,
+            supports_streaming=True,
+            height=720,
+            width=1280,
+            thumb=thumbnail,
+            duration=dur,
+            progress=progress_bar,
+            progress_args=(reply, start_time)
+        )
+    except Exception:
+        # Fallback to document if video streaming fails
+        process = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, shell=True)
+        await m.reply_document(
+            process.stdout,
+            caption=cc,
+            progress=progress_bar,
+            progress_args=(reply, start_time)
+        )
+    
     finally:
         await reply.delete(True)
         os.remove(filename)
-        if os.path.exists(f"{filename}.jpg"):
-            os.remove(f"{filename}.jpg")
+        os.remove(f"{filename}.jpg")
