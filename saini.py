@@ -293,55 +293,6 @@ async def download_and_decrypt_video(url, cmd, name, key):
             return None  
 
 async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
-    # Start thumbnail generation in parallel
-    async def generate_thumbnail():
-        process = await asyncio.create_subprocess_shell(
-            f'ffmpeg -i "{filename}" -ss 00:00:15 -vframes 1 "{filename}.jpg"',
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        await process.communicate()
-        return f"{filename}.jpg"
-
-    # Start video processing (pipe output)
-    async def get_video_pipe():
-        process = await asyncio.create_subprocess_shell(
-            f'ffmpeg -i "{filename}" -ss 00:00:15 -c:v copy -c:a copy -f matroska -',
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        return process
-
-    # Run thumbnail generation and delete progress message concurrently
-    thumbnail_task = asyncio.create_task(generate_thumbnail())
-    await prog.delete(True)
-    reply = await m.reply_text(f"**Generate Thumbnail:**\n{name}")
-
-    try:
-        if thumb == "/d":
-            thumbnail = await thumbnail_task  # Wait for thumbnail
-        else:
-            thumbnail = thumb
-    except Exception as e:
-        await m.reply_text(str(e))
-        return
-
-    # Get video duration and adjust for 15-second skip
-    dur = int(duration(filename)) - 15
-    start_time = time.time()
-
-    try:
-        # Get video pipe
-        video_process = await get_video_pipe()
-        try:
-            await m.reply_video(
-                video_process.stdout,  # Pipe FFmpeg output directly
-                caption=cc,
-                supports_streaming=True,
-                height=720,
-                width=1280,
-                thumb=thumbnail,
-async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
     # Generate thumbnail, skipping first 15 seconds
     subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:15 -vframes 1 "{filename}.jpg"', shell=True)
     await prog.delete(True)
