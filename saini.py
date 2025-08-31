@@ -11,6 +11,7 @@ import requests
 import tgcrypto
 import subprocess
 import json
+import shlex
 import concurrent.futures
 from math import ceil
 from utils import progress_bar
@@ -303,6 +304,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             thumbnail = thumb
     except Exception as e:
         await m.reply_text(str(e))
+        return
 
     # Get video resolution using ffprobe
     try:
@@ -328,14 +330,15 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
         output_filename = f"processed_{filename}"
         # Set resolution to match input (720p or 480p)
         scale_filter = f"scale={width}:{height}:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2"
-        subprocess.run(
+        ffmpeg_cmd = (
             f'ffmpeg -i "{filename}" -ss 00:00:16 '
             f'-c:v libx264 -crf 23 -preset ultrafast '
-            f'-vf {scale_filter} '
+            f'-vf "{scale_filter}" '
             f'-c:a aac -b:a 128k '
-            f'-movflags +faststart "{output_filename}"',
-            shell=True
+            f'-movflags +faststart "{output_filename}"'
         )
+        # Use shlex.split to properly handle the command
+        subprocess.run(shlex.split(ffmpeg_cmd), check=True)
 
         # Set output dimensions for Telegram based on input resolution
         display_width = width
@@ -359,7 +362,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog):
             progress_args=(reply, start_time)
         )
         os.remove(output_filename)  # Clean up processed video file
-    except Exception:
+    except Exception as e:
         await m.reply_document(
             output_filename,
             caption=cc,
