@@ -210,16 +210,16 @@ async def txt_handler(bot: Client, m: Message):
                 url = Vxy
             # Title processing
             title = links[i][0]
-            # Split title to extract name1 and raw_text65
-            if "💀" in title:
-                # Split on "₹" to get parts
-                parts = title.split("💀")
-                name1 = parts[0].strip()  # "Newton's Laws of Motion : 01"
-                raw_text65 = parts[1].strip()  # "OPMASTER"
-            else:
-                # Fallback if no "₹" is found
-                name1 = title.strip()
-                raw_text65 = ""
+            # Split title on "💀"
+            parts = title.split("💀")
+            name1 = parts[0].strip()
+            # raw_text65 is always the second part if it exists
+            raw_text65 = parts[1].strip() if len(parts) > 1 else ""
+            # Optional: raw_text97 if your first format is present
+            raw_text97 = ""
+            if len(parts) > 2:
+                # Remove trailing "🌚" if present
+                raw_text97 = parts[2].replace("🌚", "").strip()
 
             cleaned_name1 = name1.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{cleaned_name1[:60]}'
@@ -266,7 +266,7 @@ async def txt_handler(bot: Client, m: Message):
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
             try:
-                cc = f'**|🇮🇳| {cleaned_name1}\n\n😎 ℚ𝕦𝕒𝕝𝕚𝕥𝕪 ➠ {raw_text62}p\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
+                cc = f'**|🇮🇳| {cleaned_name1}\n\n😎 ℚ𝕦𝕒𝕝𝕚𝕥𝕪 ➠ {raw_text97}p\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cc1 = f'**|🇮🇳| {cleaned_name1}\n\n🧿 𝐁𝐀𝐓𝐂𝐇 ➤ {b_name}\n\nChapterId > {raw_text65}**'
                 cczip = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**📁 Title :** `{name1}`\n**├── Extention :**  .zip\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :** '
                 ccimg = f'[——— ✦ {str(count).zfill(3)} ✦ ———]()\n\n**🖼️ Title :** `{name1}`\n**├── Extention :**   .jpg\n\n**📚 Course :** {b_name}\n\n**🌟 Extracted By :**'
