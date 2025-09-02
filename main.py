@@ -250,6 +250,43 @@ async def txt_handler(bot: Client, m: Message):
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
 
+            elif "pwjarvis.com" in url:
+                headers = {
+                    "authority": "www.pwjarvis.com",
+                    "accept": "*/*",
+                    "accept-language": "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "cache-control": "no-cache",
+                    "cookie": "cf_clearance=uILgIif6ChBfjy9OqqXuF9tTWfCrPKvaryBJboaUBY0-1756784236-1.2.1.1-XNnuhv6CApTRvUBVzPr2Bs_6B4o.BJqveFXoAHDvTAV7Ch4WzgZsoBBC9RGGHKaOlpXOQxgatwtoLGuGdqkqBeJNR45Sbtg1GuPbfIxyaLxpYoNo3LRm.8Wekm6A3GWnWQBW4pugHqTI7DyIx95SgoVRngB0UUecVS2rRMhTECRNOpm88Y3SaomAHENUILG2zZjKuvqzl9Ue_k5RO7rtjpHPhuxpa9kbH2ZzbmwUqgw; PWS=Fe26.2*1*9c270963cdf469805abaf9e5673167358fd36fba6d7a613797cdcaed3ed6d588*5fY55QYgEqSLF0vSS_Oumg*bAx08VnQVZaBbZiKRQnPSMjWANHMCzQOZSM3TnpHd0uwG1syZL0iZOuzWXsiK4NMrPoCXV6KhFgLbh0w11yy8Sg0Zpua6aSdID3l0SxGdx6uGHQA6UAYyvHTboknVcG6psT9yhQnQfVhYjuLC3-t130eI5w4XZnMTscD2409Hv4*1757902047797*2057847dd4c4bee6d06a92a80c589d420a3929ac57cd37fdab8d1c709e31d863*uImyuHN9VAlJvgpgT7mz-4sHmVTgFVLM44bj09JdLyw~2",
+                    "next-router-state-tree": "%5B%22%22%2C%7B%22children%22%3A%5B%22study%22%2C%7B%22children%22%3A%5B%22batches%22%2C%7B%22children%22%3A%5B%5B%22batchID%22%2C%22prayas-2023-617434%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22subjects%22%2C%7B%22children%22%3A%5B%5B%22subjectID%22%2C%22physics-785455%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22topics%22%2C%7B%22children%22%3A%5B%5B%22topicID%22%2C%22jee-mains-revision-333137%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22schedule%22%2C%7B%22children%22%3A%5B%5B%22scheduleId%22%2C%22dedeffe13da404f223b84cb90f4ca72c2c1114d30f41da755f1f36abdd38850e%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2C%22%2Fstudy%2Fbatches%2Fprayas-2023-617434%2Fsubjects%2Fphysics-785455%2Ftopics%2Fjee-mains-revision-333137%2Fschedule%2Fdedeffe13da404f223b84cb90f4ca72c2c1114d30f41da755f1f36abdd38850e%22%2C%22refetch%22%5D%7D%5D%7D%5D%7D%5D%7D%5D%7D%5D%7D%5D%7D%5D%7D%5D%7D%5D%7D%5D",
+                    "pragma": "no-cache",
+                    "rsc": "1",
+                    "sec-ch-ua": '"Chromium";v="137", "Not/A)Brand";v="24"',
+                    "sec-ch-ua-arch": "",
+                    "sec-ch-ua-bitness": "",
+                    "sec-ch-ua-full-version": "137.0.7337.0",
+                    "sec-ch-ua-full-version-list": '"Chromium";v="137.0.7337.0", "Not/A)Brand";v="24.0.0.0"',
+                    "sec-ch-ua-mobile": "?1",
+                    "sec-ch-ua-model": "211033MI",
+                    "sec-ch-ua-platform": "Android",
+                    "sec-ch-ua-platform-version": "11.0.0",
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "same-origin",
+                    "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
+                }
+                response = requests.get(url, headers=headers)
+                if response.status_code == 200:
+                    match = re.search(r'https://cors\.pwjarvis\.com/[\w\-._~:/?#[\]@!$&\'()*+,;=%]+/master\.mpd', response.text)
+                    if match:
+                        original_link = match.group()
+                        transformed_link = original_link.replace("https://cors.pwjarvis.com", "https://stream.pwjarvis.com")
+                        transformed_link = transformed_link.replace("/master.mpd", "/hls/{raw_text97}/main.m3u8")
+                        url = transformed_link
+                    else:
+                        raise Exception("Video link not found in the response")
+                else:
+                    raise Exception(f"Failed to fetch the page, status code: {response.status_code}")
+
             if "youtu" in url:
                 ytf = f"b[height<={raw_text2}][ext=mp4]/bv[height<={raw_text2}][ext=mp4]+ba[ext=m4a]/b[ext=mp4]"
             elif "embed" in url:
