@@ -244,7 +244,14 @@ async def txt_handler(bot: Client, m: Message):
                     }) as resp:
                         text = await resp.text()
                         url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
-                                                                                                                                                                                                                  
+
+            elif "studystark.site" in url:
+                response = requests.get(url)
+                data = response.json()
+                video_url = data.get("video_url", "")
+                if video_url:
+                    url = video_url.replace("master.mpd", "hls/{raw_text97}}/main.m3u8")
+
 
             elif "encrypted.m" in url:
                 appxkey = url.split('*')[1]
