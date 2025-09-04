@@ -251,39 +251,31 @@ async def txt_handler(bot: Client, m: Message):
 
             elif "studystark.site" in url:
                 try:
-                    # Add headers to mimic a browser request
-                    headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-                        "Accept": "application/json",
-                    }
-                    print(f"Fetching URL: {url}")  # Debugging
-                    response = requests.get(url, headers=headers)
+                    response = requests.get(url)
                     response.raise_for_status()  # Raises an error for bad status codes
                     data = response.json()
                     video_url = data.get("video_url", "")
                     print(f"Original video_url: {video_url}")  # Debugging
                     if video_url:
-                        # Validate that video_url is a valid URL and contains "master.mpd"
-                        if "master.mpd" in video_url and video_url.startswith("https://"):
-                            if raw_text97:
-                                url = video_url.replace("master.mpd", f"hls/{raw_text97}/main.m3u8")
-                            else:
-                                # Fallback for empty raw_text97
-                                url = video_url.replace("master.mpd", "hls/default/main.m3u8")
+                        # Ensure video_url ends with master.mpd or handle other formats
+                        if video_url.endswith("master.mpd"):
+                            url = video_url.replace("master.mpd", f"hls/{raw_text97}/main.m3u8")
                         else:
-                            # Fallback if video_url is invalid or doesn't contain "master.mpd"
-                            print(f"Warning: video_url '{video_url}' is invalid or does not contain 'master.mpd'")
-                            url = video_url  # Or set to "" or another fallback
+                            # Handle cases where video_url doesn't end with master.mpd
+                            # Append hls/[raw_text97]/main.m3u8 to the base URL
+                            base_url = video_url.rsplit("/", 1)[0]  # Remove any trailing segment
+                            url = f"{base_url}/hls/{raw_text97}/main.m3u8"
+                        print(f"Final URL: {url}")  # Debugging
                     else:
-                        print("Warning: video_url is empty")
+                        print("Error: video_url is empty")
                         url = ""  # Handle empty video_url
-                    print(f"Final URL: {url}")  # Debugging
                 except requests.RequestException as e:
-                    print(f"Error fetching URL {url}: {e}")
+                    print(f"Error fetching URL: {e}")
                     url = ""  # Fallback to empty string
                 except ValueError as e:
-                    print(f"Error parsing JSON from {url}: {e}")
+                    print(f"Error parsing JSON: {e}")
                     url = ""  # Fallback to empty string
+
 
             elif "encrypted.m" in url:
                 appxkey = url.split('*')[1]
