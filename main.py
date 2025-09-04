@@ -211,19 +211,22 @@ async def txt_handler(bot: Client, m: Message):
 
             # Title processing
             title = links[i][0]
-            # Split title on "💀"
-            parts = title.split("💀")
-            name1 = parts[0].strip()
-            # raw_text65 is the second part if it exists
-            raw_text65 = parts[1].strip() if len(parts) > 1 else ""
-            # raw_text97 for the format Name💀code65💀🌚720🌚
-            raw_text97 = ""
-            if len(parts) > 2:
-                # Remove both "🌚" from the third part
-                raw_text97 = parts[2].replace("🌚", "").strip()
-            else:
-                # Fallback for non-matching format
-                raw_text97 = "default"  # Or set to "" or another fallback value
+            # Remove trailing URL part after ": https" if present
+            title_parts = title.split(" : https://")
+            title_clean = title_parts[0]  # Keep only the part before ": https://"
+            # Split cleaned title on "💀"
+            parts = title_clean.split("💀")
+            name1 = parts[0].strip()  # First part is the name
+            # raw_text65 is the second part if it exists
+            raw_text65 = parts[1].strip() if len(parts) > 1 else ""
+            # raw_text97 for the format ...💀wkfkdkkd💀🌚720🌚
+            raw_text97 = ""
+            if len(parts) > 2 and "🌚" in parts[2]:
+                # Remove both "🌚" from the third part
+                raw_text97 = parts[2].replace("🌚", "").strip()
+            else:
+                # Fallback for non-matching format (e.g., Name💀wkfkdkkd or no 💀)
+                raw_text97 = "480"  # Default resolution, adjust as needed
 
             cleaned_name1 = name1.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             name = f'[𝗛𝗔𝗖𝗞𝗛𝗘𝗜𝗦𝗧😈]{cleaned_name1[:60]}'
