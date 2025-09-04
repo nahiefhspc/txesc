@@ -250,7 +250,7 @@ async def txt_handler(bot: Client, m: Message):
                 data = response.json()
                 video_url = data.get("video_url", "")
                 if video_url:
-                    url = video_url.replace("master.mpd", "hls/{raw_text97}/main.m3u8")
+                    url = video_url.replace("master.mpd", f"hls/{raw_text97}/main.m3u8")
 
 
             elif "encrypted.m" in url:
