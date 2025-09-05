@@ -29,6 +29,7 @@ import aiohttp
 import aiofiles
 import random
 import logging
+import http.cookiejar
 
 # Configure logging
 logging.basicConfig(filename='logs.txt', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -37,6 +38,7 @@ logging.basicConfig(filename='logs.txt', level=logging.INFO, format='%(asctime)s
 OP_COMMAND = os.environ.get("OP_COMMAND", "drm")
 NONOP_COMMAND = os.environ.get("NONOP_COMMAND", "stop")
 cookies_file_path = os.getenv("cookies_file_path", "youtube_cookies.txt")
+studystark_cookies_path = os.getenv("studystark_cookies_path", "studystark_cookies.txt")
 api_url = "http://master-api-v3.vercel.app/"
 api_token = "hhxJ3k1GTWoBUbivUe1I"
 photologo = 'https://tinypic.host/images/2025/02/07/DeWatermark.ai_1738952933236-1.png'
@@ -217,6 +219,12 @@ async def handle_user_input(bot: Client, m: Message):
             path = user_states[user_id]["path"]
             b_name = user_states[user_id]["b_name"]
 
+            # Initialize a requests session for studystark.site
+            session = requests.Session()
+            session.cookies = http.cookiejar.MozillaCookieJar(studystark_cookies_path)
+            if os.path.exists(studystark_cookies_path):
+                session.cookies.load(ignore_discard=True, ignore_expires=True)
+
             for i in range(arg - 1, len(links)):
                 Vxy = links[i][1].replace("file/d/", "uc?export=download&id=").replace(
                     "www.youtube-nocookie.com/embed", "youtu.be").replace("?modestbranding=1", "").replace("/view?usp=sharing", "")
@@ -274,37 +282,63 @@ async def handle_user_input(bot: Client, m: Message):
                             url = match.group(1) if match else url
 
                 elif "studystark.site" in url:
-                    try:
-                        response = requests.get(url)
-                        response.raise_for_status()
-                        data = response.json()
-                        video_url = data.get("video_url", "")
-                        key_id = data.get("key_id", "")  # IV
-                        key_value = data.get("key_value", "")  # Key
-                        if video_url:
-                            if video_url.endswith("master.mpd"):
-                                mpd_url = video_url.replace("master.mpd", f"hls/{raw_text97}/main.m3u8")
-                            else:
-                                base_url = video_url.rsplit("/", 1)[0]
-                                mpd_url = f"{base_url}/hls/{raw_text97}/main.m3u8"
-                            if key_id and key_value:
-                                try:
-                                    key_hex = b64decode(key_value).hex()
-                                    iv_hex = b64decode(key_id).hex()
-                                    keys_string = f"--key 1:{key_hex}:{iv_hex}"
-                                except Exception as e:
-                                    logging.error(f"Error decoding key/IV for {url}: {e}")
-                                    keys_string = ""
-                            else:
+                    max_retries = 5
+                    retry_delay = 5
+                    for attempt in range(max_retries):
+                        try:
+                            headers = {
+                                'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36',
+                                'Accept': 'application/json, text/plain, */*',
+                                'Accept-Encoding': 'gzip, deflate, br',
+                                'Accept-Language': 'en-US,en;q=0.9',
+                                'Connection': 'keep-alive',
+                                'Referer': 'https://studystark.site/',
+                                'Origin': 'https://studystark.site',
+                                'Sec-Fetch-Dest': 'empty',
+                                'Sec-Fetch-Mode': 'cors',
+                                'Sec-Fetch-Site': 'same-origin'
+                            }
+                            response = session.get(url, headers=headers, timeout=15)
+                            response.raise_for_status()
+                            logging.info(f"studystark.site response: {response.status_code} - {response.text[:500]}")
+                            data = response.json()
+                            if not data.get("success", False):
+                                logging.error(f"studystark.site API returned success: false for {url}")
+                                url = ""
                                 keys_string = ""
-                            url = mpd_url
-                        else:
-                            logging.error(f"Error: video_url is empty for {url}")
-                            url = ""
-                    except Exception as e:
-                        logging.error(f"Error processing studystark.site URL {url}: {e}")
-                        url = ""
-                        keys_string = ""
+                                break
+                            video_url = data.get("video_url", "")
+                            key_id = data.get("key_id", "")  # IV
+                            key_value = data.get("key_value", "")  # Key
+                            if video_url:
+                                if video_url.endswith("master.mpd"):
+                                    mpd_url = video_url.replace("master.mpd", f"hls/{raw_text97}/main.m3u8")
+                                else:
+                                    base_url = video_url.rsplit("/", 1)[0]
+                                    mpd_url = f"{base_url}/hls/{raw_text97}/main.m3u8"
+                                if key_id and key_value:
+                                    try:
+                                        key_hex = b64decode(key_value).hex()
+                                        iv_hex = b64decode(key_id).hex()
+                                        keys_string = f"--key 1:{key_hex}:{iv_hex}"
+                                    except Exception as e:
+                                        logging.error(f"Error decoding key/IV for {url}: {e}")
+                                        keys_string = ""
+                                else:
+                                    keys_string = ""
+                                url = mpd_url
+                            else:
+                                logging.error(f"Error: video_url is empty for {url}")
+                                url = ""
+                            session.cookies.save(ignore_discard=True, ignore_expires=True)
+                            break
+                        except requests.exceptions.RequestException as e:
+                            logging.error(f"Attempt {attempt + 1}/{max_retries} failed for {url}: {e}")
+                            if attempt + 1 == max_retries:
+                                await bot.send_message(chat_id, f"Failed to fetch studystark.site URL after {max_retries} attempts: {e}")
+                                url = ""
+                                keys_string = ""
+                            await asyncio.sleep(retry_delay * (2 ** attempt) * random.uniform(0.8, 1.2))
 
                 elif "pwjarvis.com" in url:
                     headers = {
@@ -330,7 +364,7 @@ async def handle_user_input(bot: Client, m: Message):
                         "sec-fetch-site": "same-origin",
                         "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36"
                     }
-                    response = requests.get(url, headers=headers)
+                    response = session.get(url, headers=headers)
                     if response.status_code == 200:
                         match = re.search(r'https://cors\.pwjarvis\.com/[\w\-._~:/?#[\]@!$&\'()*+,;=%]+/master\.mpd', response.text)
                         if match:
@@ -480,7 +514,7 @@ async def handle_user_input(bot: Client, m: Message):
                         Show = (
                             f"🚀𝐏𝐫𝐨𝐠𝐫𝐞𝐬𝐬 » {progress:.2f}%\n┃\n"
                             f"┣🔗𝐈𝐧𝐝𝐞𝐱 » {count}/{len(links)}\n┃\n"
-                            f"╰━🖇️𝐑𝐞𝐦𝐚𝐢𝐧 𝐋𝐢𝐧𝐤𝐬 » {remaining_links}\n"
+                            f"╰━🖇️𝐑𝐞𝐦𝐚𝐢𝐧 𝐋𝐢𝐮𝐧𝐤𝐬 » {remaining_links}\n"
                             f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
                             f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n┃\n"
                             f"╰━📚𝐁𝐚𝐭𝐚𝐜𝐡 𝐍𝐚𝐦𝐞 » {b_name}\n"
@@ -515,6 +549,8 @@ async def handle_user_input(bot: Client, m: Message):
                     failed_count += 1
                     continue
 
+            session.cookies.save(ignore_discard=True, ignore_expires=True)
+            session.close()
             await bot.send_message(chat_id, f"⋅ ─ Total failed links is {failed_count} ─ ⋅")
             await bot.send_message(chat_id, f"⋅ ─ list index ({raw_text}-{len(links)}) out of range ─ ⋅\n\n✨ **BATCH** » {b_name}✨\n\n⋅ ─ DOWNLOADING ✩ COMPLETED ─ ⋅")
             del user_states[user_id]
